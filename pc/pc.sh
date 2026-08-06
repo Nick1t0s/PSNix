@@ -39,8 +39,9 @@ KEEPER=$!
 trap 'kill $KEEPER 2>/dev/null' EXIT
 
 # =====================================================================
-#  Движок: спиннер во время установки, затем ✔/✘ на той же строке.
-#  Весь вывод команд уходит в temp-лог (консоль не засоряется).
+#  Движок: вывод команды идёт в терминал в реальном времени, а по
+#  окончании (успех/ошибка/прерывание) стирается через альтернативный
+#  экран. Полный лог сохраняется в temp-файл для итогового вывода.
 # =====================================================================
 # Рекурсивно убивает процесс и всех его потомков (apt/snap часто
 # порождают дочерние процессы — kill по одному PID их не снимет).
@@ -53,15 +54,13 @@ kill_tree() {
 }
 
 run() {
-  local name="$1" fn="$2" log sp i=0 pid rc killed=0 key
+  local name="$1" fn="$2" log pid rc killed=0 key
   log=$(mktemp)
-  sp='-\|/'
-  printf '  %b%s%b %s' "$CYAN" "$name" "$RESET" "${sp:i%4:1}"
-  ( "$fn" </dev/null >"$log" 2>&1 ) &
+  tput smcup
+  printf '  %b%s%b\n' "$CYAN" "$name" "$RESET"
+  ( "$fn" </dev/null 2>&1 | tee "$log" ) &
   pid=$!
   while kill -0 "$pid" 2>/dev/null; do
-    printf '\r  %b%s%b %s' "$CYAN" "$name" "$RESET" "${sp:i%4:1}"
-    i=$((i+1))
     read -t 0.1 -n 1 -r -s key
     if [ "$key" = "k" ] || [ "$key" = "q" ]; then
       killed=1
@@ -72,6 +71,7 @@ run() {
     fi
   done
   wait "$pid" 2>/dev/null; rc=$?
+  tput rmcup
   if [ "$killed" -eq 1 ]; then
     printf '\r  %b✘%b %b%s%b %b(убита вручную)%b\033[K\n' "$RED" "$RESET" "$BOLD" "$name" "$RESET" "$YELLOW" "$RESET"
     FAILED+=("$name")
