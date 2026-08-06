@@ -34,13 +34,6 @@ echo ""
 # ---- sudo: спросить пароль один раз и держать кэш живым -------------
 echo "  ${BOLD}Проверка sudo...${RESET}"
 sudo -v || { echo "  ${RED}Нет прав sudo — выход.${RESET}"; exit 1; }
-# По умолчанию sudo кэширует пароль по tty (tty_tickets), из-за чего
-# каждый вызов sudo снова спрашивал бы пароль. Отключаем один раз.
-if [ ! -f /etc/sudoers.d/99-psnix ]; then
-  echo "Defaults !tty_tickets" | sudo tee /etc/sudoers.d/99-psnix > /dev/null
-  sudo chmod 0440 /etc/sudoers.d/99-psnix
-  sudo -v
-fi
 ( trap '' INT; while true; do sudo -n true; sleep 60; done ) &
 KEEPER=$!
 trap 'kill $KEEPER 2>/dev/null' EXIT
@@ -103,7 +96,7 @@ task_flatpak() {
 
 task_nekoray() {
   sudo apt install -y libxcb-xinerama0
-  curl -fL --retry 5 --retry-all-errors -o /tmp/nekoray.deb https://github.com/MatsuriDayo/nekoray/releases/download/3.26/nekoray-3.26-2023-12-09-debian-x64.deb
+  curl -fsSL --retry 5 --retry-all-errors -o /tmp/nekoray.deb https://github.com/MatsuriDayo/nekoray/releases/download/3.26/nekoray-3.26-2023-12-09-debian-x64.deb
   sudo apt install -y /tmp/nekoray.deb
 }
 
@@ -119,7 +112,7 @@ task_obsidian() {
   local ver
   ver=$(curl -fsSL https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
   [ -n "$ver" ] || { echo "  Не удалось получить версию Obsidian" >&2; return 1; }
-  curl -fL --retry 5 --retry-all-errors -o /tmp/obsidian.deb \
+  curl -fsSL --retry 5 --retry-all-errors -o /tmp/obsidian.deb \
     "https://github.com/obsidianmd/obsidian-releases/releases/download/v${ver}/obsidian_${ver}_amd64.deb"
   sudo apt install -y /tmp/obsidian.deb
 }
@@ -168,7 +161,7 @@ task_docker() {
   sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
   sudo apt install -y ca-certificates curl gnupg
   sudo install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --batch --dearmor -o /etc/apt/keyrings/docker.gpg
   sudo chmod a+r /etc/apt/keyrings/docker.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
@@ -203,16 +196,16 @@ task_konsave() {
 
 task_ollama() {
   local i
+  echo "  Тихая установка, может занять несколько минут..."
   for i in 1 2 3; do
-    curl -fsSL https://ollama.com/install.sh | sh && return 0
-    echo "  Сетевая ошибка при загрузке Ollama — попытка $i/3..." >&2
+    curl -fsSL https://ollama.com/install.sh | sh >/dev/null 2>&1 && return 0
     sleep 3
   done
   return 1
 }
 
 task_opencode() {
-  sudo snap install opencode
+  sudo snap install opencode --classic
 }
 
 task_firefox() {
