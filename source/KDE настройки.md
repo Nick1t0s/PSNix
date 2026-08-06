@@ -1,0 +1,6 @@
+- Перенести панель задач наверх
+- Отключить звк изменения громкости - System Settings - Sound - Configure Volume Controls - Play audio feedback for changes to
+- Перевести часы в 24 часовой формат
+- Отключить засыпание(только для пк)
+- Отключить уведомление при сменен клавиатуры - Keyboard - Keyboard - Configure swtiching - show osd popup layout change(снять галку)
+- Поставить фокус следует за мышкой
