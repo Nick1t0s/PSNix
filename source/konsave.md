@@ -58,6 +58,8 @@ konsave --version
 ./pc/kde-export.sh MySet  # → pc/MySet.knsv
 ```
 
+Обои (пути `Image=`/`PreviewImage=` из `plasma-org.kde.plasma.desktop-appletsrc` и `kscreenlockerrc`) копируются в `pc/wallpapers/` с манифестом `paths.txt`. Восстановление раскладывает их в `~/Pictures` и переписывает пути в конфигах — снимок самодостаточен, удаление исходника обоев ничего не ломает.
+
 ---
 
 ## Ссылки
