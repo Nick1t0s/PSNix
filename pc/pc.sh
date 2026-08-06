@@ -58,10 +58,13 @@ run() {
   local name="$1" fn="$2" log pid rc killed_manually=0
   log=$(mktemp)
   printf '\n  %b▶%b %b%s%b\n' "$CYAN" "$RESET" "$BOLD" "$name" "$RESET"
-  # 0<&0: держим stdin от терминала открытым, чтобы при необходимости
-  # интерактивный промпт можно было нажать вручную.
-  ( "$fn" 0<&0 2>&1 | tee "$log" ) &
+  # В фоновой под-оболочке bash сам подменяет stdin на /dev/null, поэтому
+  # «0<&0» от этого не спасает — ввод не доходит до интерактивных промптов
+  # (debconf и т.п.). Сохраняем настоящий stdin на fd 3 и пробрасываем его.
+  exec 3<&0
+  ( "$fn" 0<&3 2>&1 | tee "$log" ) &
   pid=$!
+  exec 3<&-
   trap 'killed_manually=1; kill_tree TERM "$pid"; sleep 1; kill_tree KILL "$pid"' INT
   wait "$pid"; rc=$?
   trap - INT
