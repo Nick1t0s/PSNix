@@ -98,6 +98,34 @@ task_update() {
   sudo apt autoremove -y
 }
 
+task_git() {
+  sudo apt install -y git git-lfs
+}
+
+task_buildtools() {
+  sudo apt install -y build-essential cmake
+}
+
+task_basics() {
+  sudo apt install -y curl wget unzip p7zip-full
+}
+
+task_cli_tools() {
+  sudo apt install -y ripgrep fd-find fzf bat eza tree ncdu duf
+}
+
+task_tmux() {
+  sudo apt install -y tmux
+}
+
+task_monitoring() {
+  sudo apt install -y btop nvtop iotop nload iftop nethogs
+}
+
+task_misc() {
+  sudo apt install -y imagemagick rsync sshfs timeshift
+}
+
 task_flatpak() {
   sudo apt install -y flatpak
   flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -284,6 +312,13 @@ echo "  ${YELLOW}нажмите ${BOLD}Ctrl+C${RESET}${YELLOW}: он будет 
 echo ""
 
 run "Обновление системы"        task_update
+run "Git + git-lfs"             task_git
+run "Инструменты сборки"        task_buildtools
+run "Базовые утилиты"           task_basics
+run "CLI-утилиты"               task_cli_tools
+run "tmux"                      task_tmux
+run "Мониторинг"                task_monitoring
+run "Прочие утилиты"            task_misc
 run "Flatpak + Flathub"         task_flatpak
 run "Nekoray"                   task_nekoray
 run "Node.js + npm"             task_nodejs
