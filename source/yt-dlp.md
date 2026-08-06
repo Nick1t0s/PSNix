@@ -18,11 +18,15 @@ sudo apt update
 sudo apt install yt-dlp -y
 ```
 
-Для самой свежей версии можно поставить через pip:
+Для самой свежей версии можно поставить через pipx:
 
 ```bash
-pip install --user -U yt-dlp
+sudo apt install -y pipx
+pipx ensurepath
+pipx install yt-dlp
 ```
+
+pipx ставит в изолированный venv и не трогает системный Python (в отличие от `pip install --user`, который на Ubuntu 24.04+ требует опасного `--break-system-packages`). Бинарь из `~/.local/bin` имеет приоритет над apt-версией в PATH.
 
 ---
 
@@ -51,7 +55,7 @@ yt-dlp --version
 
 ```bash
 sudo apt upgrade yt-dlp
-pip install --user -U yt-dlp
+pipx upgrade yt-dlp
 ```
 
 ---

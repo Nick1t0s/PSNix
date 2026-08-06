@@ -169,6 +169,12 @@ task_jq() {
   sudo apt install -y jq
 }
 
+task_konsave() {
+  sudo apt install -y pipx
+  pipx ensurepath
+  pipx install konsave
+}
+
 task_ollama() {
   curl -fsSL https://ollama.com/install.sh | sh
 }
@@ -240,6 +246,7 @@ run "GitHub CLI (gh)"           task_gh
 run "Ghostscript"               task_ghostscript
 run "htop"                      task_htop
 run "jq"                        task_jq
+run "Konsave"                   task_konsave
 run "Ollama"                    task_ollama
 run "OpenCode"                  task_opencode
 run "Firefox"                   task_firefox

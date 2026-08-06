@@ -1,0 +1,66 @@
+# Konsave
+
+> CLI-утилита для сохранения и применения настроек Linux-кастомизации. Из коробки поддерживает KDE Plasma 6.
+
+---
+
+## Требования
+
+- Ubuntu / Debian / Linux Mint
+- Права `sudo`
+- Python 3
+
+---
+
+## Шаг 1 — Установка
+
+```bash
+sudo apt install -y pipx
+pipx ensurepath
+pipx install konsave
+```
+
+Установка через `pipx` изолирует konsave в собственном venv и не трогает системный Python. Вариант с `sudo python3 -m pip install --break-system-packages` на Ubuntu 24.04+ (PEP 668) работает, но опасен: pip может обновить системные пакеты, от которых зависит apt.
+
+---
+
+## Шаг 2 — Проверка
+
+```bash
+konsave --version
+```
+
+При первом запуске konsave сам создаёт `~/.config/konsave/conf.yaml` из шаблона KDE (авто-детект по `$XDG_CURRENT_DESKTOP`).
+
+---
+
+## Использование
+
+|Команда|Описание|
+|---|---|
+|`konsave -s myprofile`|Сохранить текущие настройки в профиль|
+|`konsave -s myprofile -f`|Сохранить с перезаписью существующего профиля|
+|`konsave -a myprofile`|Применить профиль|
+|`konsave -e myprofile -d DIR -n name -f`|Экспорт профиля в `DIR/name.knsv` (перезапись)|
+|`konsave -i file.knsv`|Импорт профиля из архива|
+|`konsave -l`|Список профилей|
+
+Профили хранятся в `~/.config/konsave/profiles/`. После применения выйдите и войдите заново (или перезапустите `plasmashell`).
+
+---
+
+## Быстрый снимок настроек (PSNix)
+
+Скрипты `pc/kde-export.sh` и `laptop/kde-export.sh` сохраняют снимок в `<имя>.knsv` в свою директорию:
+
+```bash
+./pc/kde-export.sh        # → pc/KDE.knsv
+./pc/kde-export.sh MySet  # → pc/MySet.knsv
+```
+
+---
+
+## Ссылки
+
+- [github.com/Prayag2/konsave](https://github.com/Prayag2/konsave)
+- [pypi.org/project/Konsave](https://pypi.org/project/Konsave/)
