@@ -34,7 +34,7 @@ echo ""
 # ---- sudo: спросить пароль один раз и держать кэш живым -------------
 echo "  ${BOLD}Проверка sudo...${RESET}"
 sudo -v || { echo "  ${RED}Нет прав sudo — выход.${RESET}"; exit 1; }
-( while true; do sudo -n true; sleep 60; done ) &
+( trap '' INT; while true; do sudo -n true; sleep 60; done ) &
 KEEPER=$!
 trap 'kill $KEEPER 2>/dev/null' EXIT
 
@@ -54,26 +54,33 @@ kill_tree() {
 }
 
 run() {
-  local name="$1" fn="$2" log pid rc killed=0 key
+  local name="$1" fn="$2" log pid rc killed_manually=0
   log=$(mktemp)
   tput smcup
   printf '  %b%s%b\n' "$CYAN" "$name" "$RESET"
-  ( "$fn" </dev/null 2>&1 | tee "$log" ) &
-  pid=$!
-  while kill -0 "$pid" 2>/dev/null; do
-    read -t 0.1 -n 1 -r -s key
-    if [ "$key" = "k" ] || [ "$key" = "q" ]; then
-      killed=1
-      kill_tree TERM "$pid"
-      sleep 2
-      kill_tree KILL "$pid"
-      break
-    fi
-  done
-  wait "$pid" 2>/dev/null; rc=$?
+  export -f "$fn"
+  if [ -t 0 ]; then
+    # Реальный pty: любой интерактивный промпт (лицензии VirtualBox и т.п.)
+    # можно нажать вручную. Лог пишет сам script.
+    # 0<&0: без этого bash для фоновой задачи (&) подставит stdin из
+    # /dev/null, и интерактивный ввод (лицензии и т.п.) до ребёнка не дойдёт.
+    # script уводит наш терминал в raw-режим (гасит ISIG) — возвращаем ISIG,
+    # чтобы Ctrl+C снова генерировал сигнал; stderr script-а прячем в лог.
+    script -qefc "bash -c '$fn'" "$log" 0<&0 2>>"$log" &
+    pid=$!
+    stty isig </dev/tty 2>/dev/null || true
+    trap 'killed_manually=1; kill_tree TERM "$pid"; sleep 1; kill_tree KILL "$pid"' INT
+    wait "$pid"; rc=$?
+    trap - INT
+  else
+    # Запасной путь без tty (например, вывод в пайп): stdin закрыт.
+    ( "$fn" </dev/null 2>&1 | tee "$log" ) &
+    pid=$!
+    wait "$pid"; rc=$?
+  fi
   tput rmcup
-  if [ "$killed" -eq 1 ]; then
-    printf '\r  %b✘%b %b%s%b %b(убита вручную)%b\033[K\n' "$RED" "$RESET" "$BOLD" "$name" "$RESET" "$YELLOW" "$RESET"
+  if [ "$killed_manually" -eq 1 ]; then
+    printf '\r  %b✘%b %b%s%b %b(прервано Ctrl+C)%b\033[K\n' "$RED" "$RESET" "$BOLD" "$name" "$RESET" "$YELLOW" "$RESET"
     FAILED+=("$name")
     LOGS["$name"]="$log"
   elif [ "$rc" -eq 0 ]; then
@@ -231,7 +238,8 @@ task_ffmpeg() {
 }
 
 task_virtualbox() {
-  echo "virtualbox-ext-pack virtualbox-ext-pack/license-seen boolean true" | sudo debconf-set-selections
+  echo "virtualbox-ext-pack virtualbox-ext-pack/license-seen boolean true"     | sudo debconf-set-selections
+  echo "virtualbox-ext-pack virtualbox-ext-pack/license-accepted boolean true" | sudo debconf-set-selections
   sudo apt install -y virtualbox virtualbox-ext-pack
 }
 
@@ -249,8 +257,8 @@ task_autocpufreq() {
 # =====================================================================
 #  Установка
 # =====================================================================
-echo "  ${YELLOW}Если установка зависла — нажмите ${BOLD}k${RESET}${YELLOW} (или q):${RESET}"
-echo "  ${YELLOW}пакет будет убит и засчитан как проваленный.${RESET}"
+echo "  ${YELLOW}Вывод установки идёт в реальном времени. Если пакет завис —${RESET}"
+echo "  ${YELLOW}нажмите ${BOLD}Ctrl+C${RESET}${YELLOW}: он будет убит и засчитан как проваленный.${RESET}"
 echo ""
 
 run "Обновление системы"        task_update
@@ -322,7 +330,7 @@ else
   for name in "${FAILED[@]}"; do
     echo ""
     echo "  ${BOLD}──── Полный вывод: $name ────${RESET}"
-    cat "${LOGS[$name]}"
+    sed '1{/^Script started on/d};${/^Script done on/d}' "${LOGS[$name]}"
   done
 fi
 
