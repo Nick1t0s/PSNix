@@ -82,6 +82,12 @@ run() {
   fi
 }
 
+# Очистка лога от ANSI-последовательностей и \r: прогресс-бары и переносы
+# каретки перетирают строки в терминале и затирают соседний вывод (в т.ч. итог).
+clean_log() {
+  sed -r 's/\x1B\[[0-9;]*[A-Za-z]//g' "$1" | tr -d '\r'
+}
+
 # =====================================================================
 #  Задачи
 # =====================================================================
@@ -236,12 +242,6 @@ task_ffmpeg() {
   sudo apt install -y ffmpeg
 }
 
-task_virtualbox() {
-  echo "virtualbox-ext-pack virtualbox-ext-pack/license-seen boolean true"     | sudo debconf-set-selections
-  echo "virtualbox-ext-pack virtualbox-ext-pack/license-accepted boolean true" | sudo debconf-set-selections
-  sudo apt install -y virtualbox virtualbox-ext-pack
-}
-
 task_rnote() {
   sudo snap install rnote
   snap connect rnote:removable-media 2>/dev/null || true
@@ -287,7 +287,6 @@ run "Samba + smbclient"         task_samba
 run "Vim"                       task_vim
 run "yt-dlp"                    task_ytdlp
 run "ffmpeg"                    task_ffmpeg
-run "VirtualBox"                task_virtualbox
 run "Rnote"                     task_rnote
 run "auto-cpufreq"              task_autocpufreq
 
@@ -317,19 +316,24 @@ fi
 # =====================================================================
 echo ""
 echo "  ${BOLD}════════════════ ИТОГ ════════════════${RESET}"
-if [ "${#FAILED[@]}" -eq 0 ]; then
-  echo "  ${GREEN}Всё установлено успешно!${RESET}  (${#SUCCESS[@]} задач)"
-else
-  echo "  Успешно: ${GREEN}${#SUCCESS[@]}${RESET}   Провал: ${RED}${#FAILED[@]}${RESET}"
+echo "  Успешно: ${GREEN}${#SUCCESS[@]}${RESET}   Провал: ${RED}${#FAILED[@]}${RESET}"
+if [ "${#SUCCESS[@]}" -gt 0 ]; then
+  echo ""
+  echo "  ${GREEN}Установлено:${RESET}"
+  for name in "${SUCCESS[@]}"; do
+    echo "    ✔ $name"
+  done
+fi
+if [ "${#FAILED[@]}" -gt 0 ]; then
   echo ""
   echo "  ${RED}Не удалось поставить:${RESET}"
   for name in "${FAILED[@]}"; do
-    echo "    • $name"
+    echo "    ✘ $name"
   done
   for name in "${FAILED[@]}"; do
     echo ""
     echo "  ${BOLD}──── Полный вывод: $name ────${RESET}"
-    sed '1{/^Script started on/d};${/^Script done on/d}' "${LOGS[$name]}"
+    clean_log "${LOGS[$name]}"
   done
 fi
 

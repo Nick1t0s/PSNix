@@ -1,0 +1,1 @@
+sudo apt update && sudo apt install -y virtualbox virtualbox-ext-pack linux-headers-generic && sudo usermod -aG vboxusers "$USER" && echo "VirtualBox установлен. Выйдите из системы и зайдите снова, чтобы применилась группа vboxusers."
