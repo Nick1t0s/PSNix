@@ -130,6 +130,10 @@ task_okular() {
   sudo apt install -y okular okular-extra-backends
 }
 
+task_pdfarranger() {
+  sudo apt install -y pdfarranger
+}
+
 task_openssh() {
   sudo apt install -y openssh-server
   sudo systemctl enable --now ssh
@@ -359,6 +363,7 @@ run "Node.js + npm"             task_nodejs
 run "OBS Studio"                task_obs
 run "Obsidian"                  task_obsidian
 run "Okular"                    task_okular
+run "PDF Arranger"              task_pdfarranger
 run "OpenSSH-сервер"            task_openssh
 run "Python 3.9-3.13"           task_python
 run "Steam"                     task_steam
