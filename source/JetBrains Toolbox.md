@@ -24,7 +24,7 @@ wget https://download.jetbrains.com/toolbox/jetbrains-toolbox-<ВЕРСИЯ>.tar
 Чтобы не вписывать версию вручную, её можно получить из API JetBrains:
 
 ```bash
-wget "https://download.jetbrains.com/toolbox/jetbrains-toolbox-$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' | grep -o '"version":"[^"]*"' | head -n1 | cut -d'"' -f4).tar.gz"
+wget "https://download.jetbrains.com/toolbox/jetbrains-toolbox-$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' | grep -o '"build":"[^"]*"' | head -n1 | cut -d'"' -f4).tar.gz"
 ```
 
 ---

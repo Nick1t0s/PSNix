@@ -252,7 +252,7 @@ task_opencode() {
 task_jetbrains_toolbox() {
   local ver pid i
   ver=$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' \
-    | grep -o '"version":"[^"]*"' | head -n1 | cut -d'"' -f4)
+    | grep -o '"build":"[^"]*"' | head -n1 | cut -d'"' -f4)
   [ -n "$ver" ] || { echo "  Не удалось получить версию JetBrains Toolbox" >&2; return 1; }
   curl -fsSL --retry 5 --retry-all-errors -o /tmp/jetbrains-toolbox.tar.gz \
     "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${ver}.tar.gz"
