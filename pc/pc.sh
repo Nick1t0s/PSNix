@@ -42,8 +42,18 @@ trap 'kill $KEEPER 2>/dev/null' EXIT
 #  Движок: спиннер во время установки, затем ✔/✘ на той же строке.
 #  Весь вывод команд уходит в temp-лог (консоль не засоряется).
 # =====================================================================
+# Рекурсивно убивает процесс и всех его потомков (apt/snap часто
+# порождают дочерние процессы — kill по одному PID их не снимет).
+kill_tree() {
+  local sig="$1" pid="$2" child
+  for child in $(pgrep -P "$pid" 2>/dev/null); do
+    kill_tree "$sig" "$child"
+  done
+  kill -"$sig" "$pid" 2>/dev/null
+}
+
 run() {
-  local name="$1" fn="$2" log sp i=0 pid rc
+  local name="$1" fn="$2" log sp i=0 pid rc killed=0 key
   log=$(mktemp)
   sp='-\|/'
   printf '  %b%s%b %s' "$CYAN" "$name" "$RESET" "${sp:i%4:1}"
@@ -51,10 +61,22 @@ run() {
   pid=$!
   while kill -0 "$pid" 2>/dev/null; do
     printf '\r  %b%s%b %s' "$CYAN" "$name" "$RESET" "${sp:i%4:1}"
-    i=$((i+1)); sleep 0.1
+    i=$((i+1))
+    read -t 0.1 -n 1 -r -s key
+    if [ "$key" = "k" ] || [ "$key" = "q" ]; then
+      killed=1
+      kill_tree TERM "$pid"
+      sleep 2
+      kill_tree KILL "$pid"
+      break
+    fi
   done
-  wait "$pid"; rc=$?
-  if [ "$rc" -eq 0 ]; then
+  wait "$pid" 2>/dev/null; rc=$?
+  if [ "$killed" -eq 1 ]; then
+    printf '\r  %b✘%b %b%s%b %b(убита вручную)%b\033[K\n' "$RED" "$RESET" "$BOLD" "$name" "$RESET" "$YELLOW" "$RESET"
+    FAILED+=("$name")
+    LOGS["$name"]="$log"
+  elif [ "$rc" -eq 0 ]; then
     printf '\r  %b✔%b %b%s%b\033[K\n' "$GREEN" "$RESET" "$BOLD" "$name" "$RESET"
     SUCCESS+=("$name")
   else
@@ -300,6 +322,9 @@ EOF
 # =====================================================================
 #  Установка
 # =====================================================================
+echo "  ${YELLOW}Если установка зависла — нажмите ${BOLD}k${RESET}${YELLOW} (или q):${RESET}"
+echo "  ${YELLOW}пакет будет убит и засчитан как проваленный.${RESET}"
+echo ""
 
 run "Обновление системы"        task_update
 run "Flatpak + Flathub"         task_flatpak
