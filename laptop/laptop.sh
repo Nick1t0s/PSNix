@@ -217,6 +217,25 @@ task_opencode() {
   sudo snap install opencode --classic
 }
 
+task_jetbrains_toolbox() {
+  local ver pid i
+  ver=$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' \
+    | grep -o '"version":"[^"]*"' | head -n1 | cut -d'"' -f4)
+  [ -n "$ver" ] || { echo "  Не удалось получить версию JetBrains Toolbox" >&2; return 1; }
+  curl -fsSL --retry 5 --retry-all-errors -o /tmp/jetbrains-toolbox.tar.gz \
+    "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${ver}.tar.gz"
+  tar -xzf /tmp/jetbrains-toolbox.tar.gz -C /tmp
+  /tmp/jetbrains-toolbox-*/jetbrains-toolbox >/dev/null 2>&1 &
+  pid=$!
+  for i in $(seq 1 30); do
+    [ -x "$HOME/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox" ] && break
+    sleep 1
+  done
+  kill "$pid" 2>/dev/null
+  wait "$pid" 2>/dev/null
+  [ -x "$HOME/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox" ]
+}
+
 task_firefox() {
   sudo apt install -y firefox
 }
@@ -281,6 +300,7 @@ run "jq"                        task_jq
 run "Konsave"                   task_konsave
 run "Ollama"                    task_ollama
 run "OpenCode"                  task_opencode
+run "JetBrains Toolbox"         task_jetbrains_toolbox
 run "Firefox"                   task_firefox
 run "rust-coreutils"            task_rust_coreutils
 run "Samba + smbclient"         task_samba
