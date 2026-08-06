@@ -285,6 +285,14 @@ task_vim() {
   sudo apt install -y vim
 }
 
+task_yazi() {
+  curl -fsSL https://yazi-rs.github.io/builds/yazi-keyring.gpg | sudo tee /usr/share/keyrings/yazi-keyring.gpg >/dev/null
+  echo 'deb [signed-by=/usr/share/keyrings/yazi-keyring.gpg] https://yazi-rs.github.io/builds/ stable main' | \
+    sudo tee /etc/apt/sources.list.d/yazi.list >/dev/null
+  sudo apt update
+  sudo apt install -y yazi
+}
+
 task_ytdlp() {
   sudo apt install -y yt-dlp
 }
@@ -345,6 +353,7 @@ run "Firefox"                   task_firefox
 run "rust-coreutils"            task_rust_coreutils
 run "Samba + smbclient"         task_samba
 run "Vim"                       task_vim
+run "Yazi"                      task_yazi
 run "yt-dlp"                    task_ytdlp
 run "ffmpeg"                    task_ffmpeg
 run "Rnote"                     task_rnote
