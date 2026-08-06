@@ -250,22 +250,27 @@ task_opencode() {
 }
 
 task_jetbrains_toolbox() {
-  local ver pid i
+  local ver pid i dest app
   ver=$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' \
     | grep -o '"build":"[^"]*"' | head -n1 | cut -d'"' -f4)
   [ -n "$ver" ] || { echo "  Не удалось получить версию JetBrains Toolbox" >&2; return 1; }
   curl -fsSL --retry 5 --retry-all-errors -o /tmp/jetbrains-toolbox.tar.gz \
-    "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${ver}.tar.gz"
-  tar -xzf /tmp/jetbrains-toolbox.tar.gz -C /tmp
-  /tmp/jetbrains-toolbox-*/jetbrains-toolbox >/dev/null 2>&1 &
+    "https://download.jetbrains.com/toolbox/jetbrains-toolbox-${ver}.tar.gz" \
+    || { echo "  Ошибка скачивания JetBrains Toolbox" >&2; return 1; }
+  dest="$HOME/.local/share/JetBrains/Toolbox"
+  mkdir -p "$dest" || { echo "  Не удалось создать $dest" >&2; return 1; }
+  rm -rf "$dest"/jetbrains-toolbox-* 2>/dev/null
+  tar -xzf /tmp/jetbrains-toolbox.tar.gz -C "$dest" \
+    || { echo "  Ошибка распаковки JetBrains Toolbox" >&2; return 1; }
+  app=$(echo "$dest"/jetbrains-toolbox-*/bin/jetbrains-toolbox)
+  [ -x "$app" ] || { echo "  Не найден бинарник JetBrains Toolbox" >&2; return 1; }
+  "$app" >/dev/null 2>&1 &
   pid=$!
   for i in $(seq 1 30); do
-    [ -x "$HOME/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox" ] && break
+    [ -e "$dest/.appState.json" ] && break
     sleep 1
   done
-  kill "$pid" 2>/dev/null
-  wait "$pid" 2>/dev/null
-  [ -x "$HOME/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox" ]
+  [ -e "$dest/.appState.json" ] || { echo "  JetBrains Toolbox не запустился" >&2; return 1; }
 }
 
 task_firefox() {

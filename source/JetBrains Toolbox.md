@@ -37,29 +37,42 @@ tar -xzf jetbrains-toolbox-*.tar.gz
 
 ---
 
-## Шаг 3 — Запустить установщик
+## Шаг 3 — Распаковать в постоянную директорию
 
-Перейти в распакованную папку (название начинается с `jetbrains-toolbox-`) и запустить установщик:
+Тихая установка на Linux невозможна: Toolbox — это просто архив. Распакуйте его в постоянную директорию (например, в свою же папку данных), а не в `/tmp`, иначе после перезагрузки ярлык сломается:
 
 ```bash
-cd jetbrains-toolbox-*/
-./jetbrains-toolbox
+mkdir -p ~/.local/share/JetBrains/Toolbox
+rm -rf ~/.local/share/JetBrains/Toolbox/jetbrains-toolbox-*
+tar -xzf jetbrains-toolbox-*.tar.gz -C ~/.local/share/JetBrains/Toolbox
 ```
 
-Запущенный файл автоматически скопирует Toolbox в `~/.local/share/JetBrains/Toolbox`, создаст ярлык в меню приложений, а затем сам закроется. После этого временные файлы можно смело удалить:
+---
+
+## Шаг 4 — Запустить
+
+Бинарник лежит в подпапке `bin`:
 
 ```bash
-rm -rf ~/jetbrains-toolbox-*.tar.gz ~/jetbrains-toolbox-*/
+~/.local/share/JetBrains/Toolbox/jetbrains-toolbox-*/bin/jetbrains-toolbox
+```
+
+При первом запуске приложение инициализирует данные в `~/.local/share/JetBrains/Toolbox` и предложит принять пользовательское соглашение. Ярлык в меню приложений появится после принятия соглашения.
+
+После запуска временный архив можно удалить:
+
+```bash
+rm -f ~/jetbrains-toolbox-*.tar.gz
 ```
 
 ---
 
 ## Запуск
 
-Toolbox появится в меню приложений Ubuntu. Запуск из терминала:
+Toolbox появится в меню приложений Ubuntu. Запуск из терминала (с версией из подпапки):
 
 ```bash
-~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox
+~/.local/share/JetBrains/Toolbox/jetbrains-toolbox-*/bin/jetbrains-toolbox
 ```
 
 ---
