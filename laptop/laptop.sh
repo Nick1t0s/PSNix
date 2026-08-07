@@ -251,6 +251,11 @@ task_opencode() {
 
 task_jetbrains_toolbox() {
   local ver pid i dest app
+  echo ""
+  echo "  ${CYAN}JetBrains Toolbox${RESET}"
+  echo "  ${YELLOW}Запустите Nekoray и подключите VPN${RESET}"
+  echo "  ${YELLOW}Без VPN скачивание JetBrains Toolbox может не работать${RESET}"
+  read -rp "  Нажмите Enter, когда VPN подключён: " _
   ver=$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' \
     | grep -o '"build":"[^"]*"' | head -n1 | cut -d'"' -f4)
   [ -n "$ver" ] || { echo "  Не удалось получить версию JetBrains Toolbox" >&2; return 1; }
