@@ -198,6 +198,10 @@ task_vlc() {
   sudo apt install -y vlc
 }
 
+task_qbittorrent() {
+  sudo apt install -y qbittorrent
+}
+
 task_docker() {
   sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
   sudo apt install -y ca-certificates curl gnupg
@@ -471,6 +475,7 @@ run "Steam"                     task_steam
 run "Telegram"                  task_telegram
 run "Thunderbird"               task_thunderbird
 run "VLC"                       task_vlc
+run "qBittorrent"               task_qbittorrent
 run "Docker"                    task_docker
 run "GitHub CLI (gh)"           task_gh
 run "Ghostscript"               task_ghostscript
