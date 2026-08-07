@@ -316,6 +316,43 @@ task_rnote() {
   snap connect rnote:removable-media 2>/dev/null || true
 }
 
+task_warthunder() {
+  local archive cand dest launcher_dir
+  # Архив лежит в корне репозитория (рядом со скриптом). На случай ручной
+  # установки проверяем ещё ~/Downloads и текущую папку.
+  archive=""
+  for cand in \
+    "$(cd "$(dirname "$0")" && pwd)/../wt_launcher_linux_"*.tar.gz \
+    "$HOME/Downloads/wt_launcher_linux_"*.tar.gz \
+    ./wt_launcher_linux_*.tar.gz; do
+    [ -f "$cand" ] && { archive="$cand"; break; }
+  done
+  [ -n "$archive" ] || { echo "  Архив wt_launcher_linux_*.tar.gz не найден — положите его в корень репо" >&2; return 1; }
+
+  dest="$HOME/wta"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  tar -xzf "$archive" -C "$dest" || { echo "  Ошибка распаковки архива War Thunder" >&2; return 1; }
+  launcher_dir="$dest/WarThunder"
+  [ -x "$launcher_dir/launcher" ] || { echo "  Бинарник launcher не найден в $launcher_dir" >&2; return 1; }
+
+  # Ярлык в меню + иконка (из launcher.ico, 256x256 PNG кадр)
+  mkdir -p "$HOME/.local/share/applications" "$HOME/.local/share/icons/hicolor/256x256/apps"
+  if command -v convert >/dev/null 2>&1; then
+    convert "$launcher_dir/launcher.ico[5]" "$HOME/.local/share/icons/hicolor/256x256/apps/warthunder.png" || true
+  fi
+  cat > "$HOME/.local/share/applications/warthunder.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=War Thunder
+Comment=Лаунчер War Thunder
+Exec=$launcher_dir/launcher
+Icon=warthunder
+Terminal=false
+Categories=Game;
+EOF
+}
+
 # ---- только для ноутбука ----
 task_autocpufreq() {
   sudo snap install auto-cpufreq
@@ -367,6 +404,7 @@ run "Yazi"                      task_yazi
 run "yt-dlp"                    task_ytdlp
 run "ffmpeg"                    task_ffmpeg
 run "Rnote"                     task_rnote
+run "War Thunder"               task_warthunder
 run "auto-cpufreq"              task_autocpufreq
 
 # ---- Zoom (интерактивно) ----
