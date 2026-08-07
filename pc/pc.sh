@@ -307,6 +307,17 @@ task_ytdlp() {
   sudo apt install -y yt-dlp
 }
 
+task_syncthing() {
+  sudo mkdir -p /etc/apt/keyrings
+  sudo curl -L -o /etc/apt/keyrings/syncthing-archive-keyring.gpg https://syncthing.net/release-key.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable-v2" | \
+    sudo tee /etc/apt/sources.list.d/syncthing.list > /dev/null
+  sudo apt-get update
+  sudo apt-get install -y syncthing
+  systemctl --user enable syncthing
+  systemctl --user start syncthing
+}
+
 task_ffmpeg() {
   sudo apt install -y ffmpeg
 }
@@ -475,6 +486,7 @@ run "Samba + smbclient"         task_samba
 run "Vim"                       task_vim
 run "Yazi"                      task_yazi
 run "yt-dlp"                    task_ytdlp
+run "Syncthing"                 task_syncthing
 run "ffmpeg"                    task_ffmpeg
 run "Rnote"                     task_rnote
 run "War Thunder"               task_warthunder
