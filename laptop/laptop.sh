@@ -119,7 +119,7 @@ task_tmux() {
 }
 
 task_monitoring() {
-  sudo apt install -y btop nvtop iotop nload iftop nethogs
+  sudo apt install -y btop nvtop iotop nload iftop nethogs powerstat
 }
 
 task_misc() {
