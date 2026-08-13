@@ -233,6 +233,20 @@ task_jq() {
   sudo apt install -y jq
 }
 
+task_lazyssh() {
+  local tag
+  sudo apt install -y jq
+  tag=$(curl -fsSL https://api.github.com/repos/Adembc/lazyssh/releases/latest | jq -r .tag_name)
+  curl -fsSL --retry 5 --retry-all-errors -L -o /tmp/lazyssh.tar.gz \
+    "https://github.com/Adembc/lazyssh/releases/download/${tag}/lazyssh_$(uname)_$(uname -m).tar.gz"
+  tar -xzf /tmp/lazyssh.tar.gz -C /tmp
+  sudo mv /tmp/lazyssh /usr/local/bin/
+}
+
+task_lazydocker() {
+  curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+}
+
 task_konsave() {
   sudo apt install -y pipx
   pipx ensurepath
@@ -481,6 +495,8 @@ run "GitHub CLI (gh)"           task_gh
 run "Ghostscript"               task_ghostscript
 run "htop"                      task_htop
 run "jq"                        task_jq
+run "lazyssh"                   task_lazyssh
+run "lazydocker"                task_lazydocker
 run "Konsave"                   task_konsave
 run "Ollama"                    task_ollama
 run "OpenCode"                  task_opencode
