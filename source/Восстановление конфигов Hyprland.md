@@ -20,18 +20,16 @@ sudo apt install -y \
 
 ## 2. Копирование конфигов
 
-Хост-специфичные файлы: **laptop** → `configs/laptop/`, **PC** → `configs/pc/`.
+Единый конфиг (laptop = PC, разделения на варианты нет):
 
 ```bash
-# host="laptop" или host="pc"
-host=laptop
-cp -v configs/$host/hyprland.conf            ~/.config/hypr/hyprland.conf
-cp -v configs/$host/waybar/hyprland-config   ~/.config/waybar/hyprland-config
-cp -v configs/hypr/hypridle.conf             ~/.config/hypr/hypridle.conf
-cp -v configs/hypr/hyprlock.conf             ~/.config/hypr/hyprlock.conf
-cp -v configs/hypr/hyprpaper.conf            ~/.config/hypr/hyprpaper.conf
-cp -v configs/waybar/hyprland-style.css      ~/.config/waybar/hyprland-style.css
-cp -v configs/waybar/scripts/cpu-temp.sh     ~/.config/waybar/scripts/cpu-temp.sh
+cp -v configs/hypr/hyprland.conf          ~/.config/hypr/hyprland.conf
+cp -v configs/hypr/hypridle.conf          ~/.config/hypr/hypridle.conf
+cp -v configs/hypr/hyprlock.conf          ~/.config/hypr/hyprlock.conf
+cp -v configs/hypr/hyprpaper.conf         ~/.config/hypr/hyprpaper.conf
+cp -v configs/waybar/hyprland-config      ~/.config/waybar/hyprland-config
+cp -v configs/waybar/hyprland-style.css   ~/.config/waybar/hyprland-style.css
+cp -v configs/waybar/scripts/cpu-temp.sh  ~/.config/waybar/scripts/cpu-temp.sh
 chmod +x ~/.config/waybar/scripts/cpu-temp.sh
 ```
 

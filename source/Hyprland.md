@@ -4,7 +4,6 @@
 > копирование конфигов делаются вручную — полное руководство по восстановлению
 > конфигов: **«Восстановление конфигов Hyprland.md»** в этой же папке.
 > Команда запуска пакетной фазы: `sudo -E python3 tasks/install_packages.py`
-> (для хоста PC добавьте `PSNIX_HOST=pc`; для laptop — не нужно, это значение по умолчанию).
 
 ---
 
@@ -45,9 +44,8 @@ cd /tmp/tfc-build && meson setup build --prefix="$HOME/.local" && ninja -C build
 
 | Куда | Что |
 |---|---|
-| `configs/laptop/` или `configs/pc/` | `hyprland.conf`, `waybar/hyprland-config` (хост-специфичные) |
-| `configs/hypr/` | `hypridle.conf`, `hyprlock.conf`, `hyprpaper.conf` |
-| `configs/waybar/` | `hyprland-style.css`, `scripts/cpu-temp.sh` |
+| `configs/hypr/` | `hyprland.conf`, `hypridle.conf`, `hyprlock.conf`, `hyprpaper.conf` |
+| `configs/waybar/` | `hyprland-config`, `hyprland-style.css`, `scripts/cpu-temp.sh` |
 | `configs/portals/` | конфиги терминального файл-пикера |
 
 После установки:

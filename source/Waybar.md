@@ -1,6 +1,6 @@
 # Waybar — статус-бар для Hyprland
 
-> Конфиги лежат в `configs/waybar/` (общие) и `configs/{pc,laptop}/waybar/` (хост-специфичные).
+> Конфиги лежат в `configs/waybar/` (единый конфиг для laptop и PC).
 > Hyprland запускает waybar так (в hyprland.conf):
 > `exec-once = waybar -c ~/.config/waybar/hyprland-config -s ~/.config/waybar/hyprland-style.css`
 
@@ -10,8 +10,8 @@
 
 | Файл | Назначение |
 |---|---|
-| `hyprland-config` | JSON-конфиг модулей (копируется из `configs/{pc,laptop}/waybar/`) |
-| `hyprland-style.css` | стиль (общий, `configs/waybar/`) |
+| `hyprland-config` | JSON-конфиг модулей |
+| `hyprland-style.css` | стиль |
 | `scripts/cpu-temp.sh` | температура CPU Package (модуль `custom/cpu-temp`) |
 
 ## Модули
@@ -20,15 +20,6 @@
 **Центр:** температура CPU, память, загрузка CPU.
 **Справа:** трей, звук (`wpctl`, `pavucontrol` по клику), раскладка
 (`hyprland/language`), часы, сеть, выключение (`hyprctl dispatch exit`).
-
-## Отличия ноутбук / ПК
-
-| Модуль | Ноутбук (`configs/laptop/`) | ПК (`configs/pc/`) |
-|---|---|---|
-| `output` | `eDP-1` | нет (все мониторы) |
-| `battery` | `BAT0`, 5 иконок заряда | нет |
-| `backlight` | `intel_backlight` | нет |
-| `network` | `wlp0s20f3` (wifi) | `enp4s0` (ethernet, формат `{ifname}`) |
 
 ## Скрипты
 
