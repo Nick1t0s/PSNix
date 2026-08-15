@@ -118,6 +118,7 @@ def task_main(name: str, run_func) -> int:
     0 — успех, 1 — TaskError/ошибка, 130 — Ctrl+C.
     """
     host = os.environ.get("PSNIX_HOST") or "default"
+    FAILURES.clear()
     begin_task(REPO / "logs" / host / f"{name}.txt")
     try:
         run_func()
@@ -276,21 +277,40 @@ def prompt(message: str) -> str:
 
 # ---- пакеты -----------------------------------------------------------
 
-def apt_install(*packages, verify=True):
+FAILURES: list[str] = []
+
+
+def _record_failure(msg: str, on_error: str):
+    """on_error="stop" — TaskError сразу; "continue" — в FAILURES и дальше."""
+    if on_error == "continue":
+        FAILURES.append(msg)
+        emit(f"  {RED}✘{RESET} {msg}")
+        return
+    raise TaskError(msg)
+
+
+def check_failures():
+    """Вызывать в конце задачи: если что-то не установилось — TaskError."""
+    if FAILURES:
+        raise TaskError("не установлено: " + "; ".join(FAILURES))
+
+
+def apt_install(*packages, verify=True, on_error="stop"):
     for pkg in packages:
         rc = run_in_terminal(["apt", "install", "-y", pkg], title=f"apt: {pkg}")
         if rc != 0:
-            raise TaskError(f"apt install {pkg}: код {rc}")
+            _record_failure(f"apt {pkg}: код {rc}", on_error)
+            continue
         if verify and not dpkg_installed(pkg):
-            raise TaskError(f"не установлен (dpkg): {pkg}")
+            _record_failure(f"apt {pkg}: не установлен (dpkg)", on_error)
 
 
-def apt_install_deb(path: str):
+def apt_install_deb(path: str, on_error="stop"):
     """Установка локального .deb в отдельном окне."""
     rc = run_in_terminal(["apt", "install", "-y", path],
                          title=f"apt: {Path(path).name}")
     if rc != 0:
-        raise TaskError(f"apt install {path}: код {rc}")
+        _record_failure(f"apt install {Path(path).name}: код {rc}", on_error)
 
 
 def dpkg_installed(package: str) -> bool:
@@ -298,13 +318,14 @@ def dpkg_installed(package: str) -> bool:
                           capture_output=True).returncode == 0
 
 
-def snap_install(name: str, *, classic=False):
+def snap_install(name: str, *, classic=False, on_error="stop"):
     cmd = ["snap", "install", name] + (["--classic"] if classic else [])
     rc = run_in_terminal(cmd, title=f"snap: {name}")
     if rc != 0:
-        raise TaskError(f"snap install {name}: код {rc}")
+        _record_failure(f"snap {name}: код {rc}", on_error)
+        return
     if not snap_installed(name):
-        raise TaskError(f"не установлен snap: {name}")
+        _record_failure(f"snap {name}: не установлен", on_error)
 
 
 def snap_installed(name: str) -> bool:

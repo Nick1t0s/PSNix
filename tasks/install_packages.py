@@ -128,9 +128,9 @@ def run():
 
     # 2. Apt-пакеты
     helpers.emit("── Apt-пакеты")
-    helpers.apt_install("git", "git-lfs")
-    helpers.apt_install("build-essential", "cmake")
-    helpers.apt_install("curl", "wget", "unzip")
+    helpers.apt_install("git", "git-lfs", on_error="continue")
+    helpers.apt_install("build-essential", "cmake", on_error="continue")
+    helpers.apt_install("curl", "wget", "unzip", on_error="continue")
     if not helpers.dpkg_installed("p7zip-full"):
         # Ubuntu 26.04: p7zip-full убран из репозитория, заменён на 7zip
         helpers.apt_install("7zip", verify=False)
@@ -138,26 +138,26 @@ def run():
             helpers.apt_install("p7zip-full", verify=False)  # 22.04/24.04
             if not helpers.dpkg_installed("p7zip-full"):
                 raise helpers.TaskError("архиватор 7-Zip не установлен (7zip/p7zip-full)")
-    helpers.apt_install("ripgrep", "fd-find", "fzf", "bat", "eza", "tree", "ncdu", "duf")
-    helpers.apt_install("tmux")
-    helpers.apt_install("btop", "nvtop", "iotop", "nload", "iftop", "nethogs", "powerstat")
-    helpers.apt_install("imagemagick", "rsync", "sshfs", "timeshift")
-    helpers.apt_install("nodejs", "npm")
-    helpers.apt_install("ffmpeg")
-    helpers.apt_install("ghostscript")
-    helpers.apt_install("htop")
-    helpers.apt_install("jq")
-    helpers.apt_install("vim")
-    helpers.apt_install("yt-dlp")
-    helpers.apt_install("rust-coreutils")
-    helpers.apt_install("okular", "okular-extra-backends")
-    helpers.apt_install("pdfarranger")
-    helpers.apt_install("firefox")
-    helpers.apt_install("vlc")
-    helpers.apt_install("qbittorrent")
-    helpers.apt_install("gh")
-    helpers.apt_install("openssh-server")
-    helpers.apt_install("samba", "smbclient")
+    helpers.apt_install("ripgrep", "fd-find", "fzf", "bat", "eza", "tree", "ncdu", "duf", on_error="continue")
+    helpers.apt_install("tmux", on_error="continue")
+    helpers.apt_install("btop", "nvtop", "iotop", "nload", "iftop", "nethogs", "powerstat", on_error="continue")
+    helpers.apt_install("imagemagick", "rsync", "sshfs", "timeshift", on_error="continue")
+    helpers.apt_install("nodejs", "npm", on_error="continue")
+    helpers.apt_install("ffmpeg", on_error="continue")
+    helpers.apt_install("ghostscript", on_error="continue")
+    helpers.apt_install("htop", on_error="continue")
+    helpers.apt_install("jq", on_error="continue")
+    helpers.apt_install("vim", on_error="continue")
+    helpers.apt_install("yt-dlp", on_error="continue")
+    helpers.apt_install("rust-coreutils", on_error="continue")
+    helpers.apt_install("okular", "okular-extra-backends", on_error="continue")
+    helpers.apt_install("pdfarranger", on_error="continue")
+    helpers.apt_install("firefox", on_error="continue")
+    helpers.apt_install("vlc", on_error="continue")
+    helpers.apt_install("qbittorrent", on_error="continue")
+    helpers.apt_install("gh", on_error="continue")
+    helpers.apt_install("openssh-server", on_error="continue")
+    helpers.apt_install("samba", "smbclient", on_error="continue")
 
     # 3. Python-версии (deadsnakes)
     helpers.emit("── Python (deadsnakes)")
@@ -166,18 +166,18 @@ def run():
     py_pkgs = []
     for v in ("9", "10", "11", "12", "13"):
         py_pkgs += [f"python3.{v}", f"python3.{v}-dev", f"python3.{v}-venv"]
-    helpers.apt_install(*py_pkgs)
+    helpers.apt_install(*py_pkgs, on_error="continue")
 
     # 4. Steam (i386 + multiverse)
     helpers.emit("── Steam")
     helpers.run(["dpkg", "--add-architecture", "i386"], sudo=True)
     helpers.run(["add-apt-repository", "-y", "multiverse"], sudo=True)
     helpers.run(["apt", "update"], sudo=True)
-    helpers.apt_install("steam")
+    helpers.apt_install("steam", on_error="continue")
 
     # 5. Flatpak + Flathub
     helpers.emit("── Flatpak")
-    helpers.apt_install("flatpak")
+    helpers.apt_install("flatpak", on_error="continue")
     helpers.run(["flatpak", "remote-add", "--if-not-exists", "flathub",
                  "https://dl.flathub.org/repo/flathub.flatpakrepo"])
 
@@ -216,7 +216,7 @@ def run():
                  "/etc/apt/keyrings/syncthing-archive-keyring.gpg"], sudo=True)
     helpers.write_sudo("/etc/apt/sources.list.d/syncthing.list", SYNCTHING_REPO)
     helpers.run(["apt-get", "update"], sudo=True)
-    helpers.apt_install("syncthing")
+    helpers.apt_install("syncthing", on_error="continue")
     helpers.systemd_enable_now("syncthing", user=True)
 
     # 8. Yazi (репозиторий)
@@ -225,19 +225,19 @@ def run():
     helpers.run(["cp", "/tmp/yazi-keyring.gpg", "/usr/share/keyrings/yazi-keyring.gpg"], sudo=True)
     helpers.write_sudo("/etc/apt/sources.list.d/yazi.list", YAZI_REPO)
     helpers.run(["apt", "update"], sudo=True)
-    helpers.apt_install("yazi")
+    helpers.apt_install("yazi", on_error="continue")
 
     # 9. Snap-пакеты
     helpers.emit("── Snap-пакеты")
-    helpers.snap_install("telegram-desktop")
-    helpers.snap_install("obs-studio")
-    helpers.snap_install("rnote")
+    helpers.snap_install("telegram-desktop", on_error="continue")
+    helpers.snap_install("obs-studio", on_error="continue")
+    helpers.snap_install("rnote", on_error="continue")
     helpers.run(["snap", "connect", "rnote:removable-media"], check=False)
-    helpers.snap_install("thunderbird")
+    helpers.snap_install("thunderbird", on_error="continue")
     helpers.run(["snap", "connect", "thunderbird:fonts"], check=False)
-    helpers.snap_install("opencode", classic=True)
+    helpers.snap_install("opencode", classic=True, on_error="continue")
     if host == "laptop":
-        helpers.snap_install("auto-cpufreq")
+        helpers.snap_install("auto-cpufreq", on_error="continue")
         helpers.run(["systemctl", "enable", "--now",
                      "snap.auto-cpufreq.service.service"], sudo=True)
 
@@ -256,7 +256,7 @@ def run():
     helpers.run(["tar", "-xzf", "/tmp/lazyssh.tar.gz", "-C", "/tmp"])
     helpers.run(["mv", "/tmp/lazyssh", "/usr/local/bin/"], sudo=True)
     helpers.emit("── konsave (pipx)")
-    helpers.apt_install("pipx")
+    helpers.apt_install("pipx", on_error="continue")
     helpers.run(["pipx", "ensurepath"])
     helpers.run(["pipx", "install", "konsave"])
     helpers.emit("── Ollama")
@@ -271,9 +271,9 @@ def run():
 
     # 11. Deb-пакеты: nekoray, obsidian, zoom
     helpers.emit("── Nekoray")
-    helpers.apt_install("libxcb-xinerama0", verify=False)
+    helpers.apt_install("libxcb-xinerama0", verify=False, on_error="continue")
     helpers.download(NEKORAY_URL, "/tmp/nekoray.deb")
-    helpers.apt_install_deb("/tmp/nekoray.deb")
+    helpers.apt_install_deb("/tmp/nekoray.deb", on_error="continue")
     helpers.emit("── Obsidian")
     ver = helpers.get_json("https://api.github.com/repos/obsidianmd/"
                            "obsidian-releases/releases/latest")["tag_name"].lstrip("v")
@@ -281,7 +281,7 @@ def run():
         raise helpers.TaskError("не удалось получить версию Obsidian")
     helpers.download(f"https://github.com/obsidianmd/obsidian-releases/releases/download/"
                      f"v{ver}/obsidian_{ver}_amd64.deb", "/tmp/obsidian.deb")
-    helpers.apt_install_deb("/tmp/obsidian.deb")
+    helpers.apt_install_deb("/tmp/obsidian.deb", on_error="continue")
 
     helpers.emit("── Zoom")
     helpers.emit("  Скачайте Zoom: https://zoom.us/download?os=linux")
@@ -303,7 +303,7 @@ def run():
         if manual and Path(manual).is_file():
             deb = manual
             break
-    helpers.apt_install_deb(deb)
+    helpers.apt_install_deb(deb, on_error="continue")
 
     # 12. JetBrains Toolbox
     helpers.emit("── JetBrains Toolbox")
@@ -352,7 +352,7 @@ def run():
                 local_deb, local_rules = str(debs[0]), str(rules[0])
                 break
             helpers.emit("  В ~/Downloads не найдены openrgb*.deb и/или 60-openrgb.rules")
-        helpers.apt_install("i2c-tools")
+        helpers.apt_install("i2c-tools", on_error="continue")
         helpers.run(["modprobe", "i2c-dev"], sudo=True, check=False)
         helpers.run(["modprobe", "i2c-i801"], sudo=True, check=False)
         helpers.append_line_sudo("/etc/modules", "i2c-dev")
@@ -360,7 +360,7 @@ def run():
         helpers.run(["cp", local_rules, "/usr/lib/udev/rules.d/"], sudo=True)
         helpers.run(["udevadm", "control", "--reload-rules"], sudo=True)
         helpers.run(["udevadm", "trigger"], sudo=True)
-        helpers.apt_install_deb(local_deb)
+        helpers.apt_install_deb(local_deb, on_error="continue")
         if helpers.sed_replace_sudo("/etc/default/grub",
                                     r'^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"$',
                                     r'GRUB_CMDLINE_LINUX_DEFAULT="\1 acpi_enforce_resources=lax"'):
@@ -384,6 +384,8 @@ def run():
         helpers.write_sudo("/etc/systemd/system/fix-docker-vpn.service", FIX_DOCKER_VPN_UNIT)
         helpers.run(["systemctl", "daemon-reload"], sudo=True)
         helpers.run(["systemctl", "enable", "--now", "fix-docker-vpn.service"], sudo=True)
+
+    helpers.check_failures()
 
 
 if __name__ == "__main__":
