@@ -130,7 +130,14 @@ def run():
     helpers.emit("── Apt-пакеты")
     helpers.apt_install("git", "git-lfs")
     helpers.apt_install("build-essential", "cmake")
-    helpers.apt_install("curl", "wget", "unzip", "p7zip-full")
+    helpers.apt_install("curl", "wget", "unzip")
+    if not helpers.dpkg_installed("p7zip-full"):
+        # Ubuntu 26.04: p7zip-full убран из репозитория, заменён на 7zip
+        helpers.run(["apt", "install", "-y", "7zip"], sudo=True, check=False)
+        if not helpers.dpkg_installed("7zip"):
+            helpers.apt_install("p7zip-full", verify=False)  # 22.04/24.04
+            if not helpers.dpkg_installed("p7zip-full"):
+                raise helpers.TaskError("архиватор 7-Zip не установлен (7zip/p7zip-full)")
     helpers.apt_install("ripgrep", "fd-find", "fzf", "bat", "eza", "tree", "ncdu", "duf")
     helpers.apt_install("tmux")
     helpers.apt_install("btop", "nvtop", "iotop", "nload", "iftop", "nethogs", "powerstat")
