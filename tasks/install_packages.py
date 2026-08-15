@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import os
 import platform
-import shutil
 import subprocess
 import sys
-import tarfile
 import time
 from pathlib import Path
 
@@ -13,8 +11,6 @@ import helpers
 
 NEKORAY_URL = ("https://github.com/MatsuriDayo/nekoray/releases/download/"
                "3.26/nekoray-3.26-2023-12-09-debian-x64.deb")
-JETBRAINS_API = ("https://data.services.jetbrains.com/products/releases?"
-                 "code=TBA&latest=true&type=release")
 DOCKER_REPO = "https://download.docker.com/linux/ubuntu/gpg"
 
 ZOOM_DESKTOP = """[Desktop Entry]
@@ -305,48 +301,7 @@ def run():
             break
     helpers.apt_install_deb(deb, on_error="continue")
 
-    # 12. JetBrains Toolbox
-    helpers.emit("── JetBrains Toolbox")
-    helpers.emit("  Запустите Nekoray и подключите VPN")
-    helpers.emit("  Без VPN скачивание JetBrains Toolbox может не работать")
-    helpers.prompt("Нажмите Enter, когда VPN подключён")
-    data = helpers.get_json(JETBRAINS_API)
-    try:
-        jb_ver = data["TBA"][0]["build"]
-    except (KeyError, IndexError, TypeError):
-        raise helpers.TaskError("не удалось получить версию JetBrains Toolbox")
-    helpers.download(f"https://download.jetbrains.com/toolbox/jetbrains-toolbox-{jb_ver}.tar.gz",
-                     "/tmp/jetbrains-toolbox.tar.gz")
-    dest = home / ".local/share/JetBrains/Toolbox"
-    dest.mkdir(parents=True, exist_ok=True)
-    for old in dest.glob("jetbrains-toolbox-*"):
-        shutil.rmtree(old, ignore_errors=True)
-    with tarfile.open("/tmp/jetbrains-toolbox.tar.gz") as tf:
-        tf.extractall(dest)
-    helpers.chown_recursive(dest)
-    apps = sorted(dest.glob("jetbrains-toolbox-*/bin/jetbrains-toolbox"))
-    if not apps:
-        raise helpers.TaskError("не найден бинарник JetBrains Toolbox")
-    launch = [str(apps[0])]
-    if helpers.is_root() and real_user:
-        uid, _ = helpers.user_uid_gid()
-        if uid:
-            launch = ["sudo", "-u", real_user, "--preserve-env", "env",
-                      f"XDG_RUNTIME_DIR=/run/user/{uid}", str(apps[0])]
-    subprocess.Popen(launch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    started = False
-    for _ in range(60):
-        if (dest / ".appState.json").exists():
-            started = True
-            break
-        time.sleep(1)
-    if not started:
-        started = helpers.run_silent(
-            ["pgrep", "-u", real_user or "root", "-f", "jetbrains-toolbox"]) == 0
-    if not started:
-        raise helpers.TaskError("JetBrains Toolbox не запустился")
-
-    # 13. Только для PC: OpenRGB, DeepCool, fix-docker-vpn
+    # 12. Только для PC: OpenRGB, DeepCool, fix-docker-vpn
     if host == "pc":
         helpers.emit("── OpenRGB")
         helpers.emit("  Скачайте с https://gitlab.com/CalcProgrammer1/OpenRGB/-/releases:")
