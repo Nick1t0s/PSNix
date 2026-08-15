@@ -1,12 +1,14 @@
 # Hyprland — установка и настройка (Ubuntu)
 
-> Задача `hyprland` (`tasks/install_hyprland.py`) ставит Hyprland-окружение и раскладывает
-> конфиги из `configs/` репозитория. Запускается через движок:
-> `sudo -E python3 install.py --host pc|laptop` (порядок задач — в `query.json`).
+> Установщик разбит на 3 фазы: `install_packages` (все пакеты,
+> кроме Wayland-стека), `copy_configs` (все конфиги из `configs/`),
+> `install_wayland` (пакеты Hyprland + сборка терминального файл-пикера).
+> Каждая фаза — отдельный терминал. Запуск: `sudo -E python3 install.py --host pc|laptop`
+> (порядок фаз — в `query.json`).
 
 ---
 
-## Шаг 1 — Пакеты
+## Шаг 1 — Пакеты (фаза `install_wayland`)
 
 ```bash
 sudo apt install -y \
@@ -36,7 +38,7 @@ git clone --depth 1 https://github.com/hunkyburrito/xdg-desktop-portal-termfilec
 cd /tmp/tfc-build && meson setup build --prefix="$HOME/.local" && ninja -C build install
 ```
 
-## Шаг 3 — Конфиги
+## Шаг 3 — Конфиги (фаза `copy_configs`)
 
 Скрипт копирует файлы из `configs/` в `~/.config/` (существующие
 бэкапятся в `*.bak`):
@@ -64,7 +66,7 @@ systemctl --user restart xdg-desktop-portal.service
 
 ## Браузер по умолчанию
 
-Задача `hyprland` назначает **Firefox** браузером по умолчанию, дописывая
+Фаза `copy_configs` назначает **Firefox** браузером по умолчанию, дописывая
 секцию `[Default Applications]` в `~/.config/mimeapps.list`:
 
 ```

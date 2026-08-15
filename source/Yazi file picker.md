@@ -2,10 +2,11 @@
 
 > Файловые диалоги приложений (открыть/сохранить/выбор папки) открываются
 > в терминале с yazi вместо стандартного GTK-диалога. Установку делает
-> задача `hyprland` (`tasks/install_hyprland.py`) — запуск: `sudo -E python3 install.py --host pc|laptop`.
+> фаза `install_wayland` (сборка termfilechooser), конфиги кладёт фаза
+> `copy_configs` — запуск: `sudo -E python3 install.py --host pc|laptop`.
 
 > **Исключение — Zoom**: Qt+CEF-клиент Zoom уходит в терминальный пикер,
-> поэтому `tasks/install_zoom.py` создаёт `~/.local/share/applications/Zoom.desktop`
+> поэтому фаза `copy_configs` создаёт `~/.local/share/applications/Zoom.desktop`
 > с `Exec=env QT_QPA_PLATFORMTHEME=gtk3 GTK_USE_PORTAL=0 ...` — у Zoom
 > остаётся нативный диалог.
 
