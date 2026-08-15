@@ -37,6 +37,97 @@ class TaskError(Exception):
     """Установка не удалась (команда упала или проверка не прошла)."""
 
 
+# ---- реальный пользователь (движок и задачи работают под sudo/root) ----
+
+def is_root() -> bool:
+    return os.geteuid() == 0
+
+
+def sudo_user() -> str | None:
+    """Имя реального пользователя (SUDO_USER), если запущены через sudo."""
+    return os.environ.get("SUDO_USER")
+
+
+def user_home() -> Path:
+    """Домашняя директория реального пользователя (не root)."""
+    user = sudo_user()
+    if user and user != "root":
+        return Path(f"/home/{user}")
+    return Path.home()
+
+
+def user_uid_gid() -> tuple[int, int]:
+    if is_root():
+        uid = int(os.environ.get("SUDO_UID") or 0)
+        gid = int(os.environ.get("SUDO_GID") or 0)
+    else:
+        uid, gid = os.getuid(), os.getgid()
+    return uid, gid
+
+
+def chown_to_user(path: str | Path) -> None:
+    """Файлы в домашней папке пользователя не должны принадлежать root."""
+    p = Path(path)
+    if not is_root():
+        return
+    try:
+        if p.resolve().is_relative_to(user_home().resolve()):
+            uid, gid = user_uid_gid()
+            if uid:
+                os.chown(p, uid, gid)
+    except OSError:
+        pass
+
+
+def user_systemctl(args, *, check=True) -> int:
+    """systemctl --user от имени реального пользователя (мы под root)."""
+    user = sudo_user()
+    uid = int(os.environ.get("SUDO_UID") or 0)
+    if is_root() and user and uid:
+        prefix = ["sudo", "-u", user, "env", f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                  "systemctl", "--user"]
+    else:
+        prefix = ["systemctl", "--user"]
+    return run([*prefix, *args], check=check)
+
+
+def xdg_user_dir(name: str) -> str:
+    """xdg-user-dir для реального пользователя (под root отвечает неверно)."""
+    user = sudo_user()
+    if is_root() and user:
+        out = capture(["sudo", "-u", user, "env", "HOME=" + str(user_home()),
+                       "xdg-user-dir", name])
+        return out or str(user_home())
+    return capture(["xdg-user-dir", name])
+
+
+def task_main(name: str, run_func) -> int:
+    """Точка входа standalone-задачи (запускается движком в своём терминале).
+
+    Логирует в logs/<host>/<name>.txt (host из env PSNIX_HOST), возвращает
+    код возврата: 0 — успех, 1 — TaskError/ошибка, 130 — Ctrl+C.
+    """
+    host = os.environ.get("PSNIX_HOST") or "default"
+    begin_task(REPO / "logs" / host / f"{name}.txt")
+    try:
+        run_func()
+        emit(f"\n{GREEN}✔{RESET} {BOLD}{name}{RESET}: готово")
+        return 0
+    except TaskError as e:
+        emit(f"\n{RED}✘{RESET} {BOLD}{name}{RESET}: {e}")
+        return 1
+    except KeyboardInterrupt:
+        emit(f"\n{YELLOW}✘{RESET} {BOLD}{name}{RESET}: прервано Ctrl+C")
+        return 130
+    except Exception as e:
+        import traceback
+        emit(f"\n{RED}✘{RESET} {BOLD}{name}{RESET}: непредвиденная ошибка: {e!r}")
+        emit(traceback.format_exc())
+        return 1
+    finally:
+        end_task()
+
+
 _log = None
 
 
@@ -67,7 +158,7 @@ def run(cmd, *, sudo=False, check=True, cwd=None, shell=False):
     Возвращает код возврата; при check=True и ненулевом коде бросает TaskError.
     Ctrl+C убивает весь process group команды.
     """
-    argv = (["sudo"] + list(cmd)) if sudo and not shell else cmd
+    argv = (["sudo"] + list(cmd)) if (sudo and not shell and not is_root()) else cmd
     proc = subprocess.Popen(
         argv,
         shell=shell,
@@ -107,14 +198,14 @@ def shell(cmd: str, *, check=True) -> int:
 
 def run_silent(cmd, *, shell=False, sudo=False) -> int:
     """Тихий запуск без вывода (прогресс-бары и т.п.). Возвращает код."""
-    argv = (["sudo"] + list(cmd)) if sudo and not shell else cmd
+    argv = (["sudo"] + list(cmd)) if (sudo and not shell and not is_root()) else cmd
     return subprocess.run(argv, shell=shell, stdout=subprocess.DEVNULL,
                           stderr=subprocess.DEVNULL, env=ENV).returncode
 
 
 def capture(cmd, *, sudo=False, shell=False) -> str:
     """Тихий запуск: возвращает stdout (без вывода в терминал и лог)."""
-    argv = (["sudo"] + list(cmd)) if sudo and not shell else cmd
+    argv = (["sudo"] + list(cmd)) if (sudo and not shell and not is_root()) else cmd
     result = subprocess.run(argv, shell=shell, capture_output=True, text=True, env=ENV)
     return result.stdout.strip()
 
@@ -159,8 +250,8 @@ def snap_installed(name: str) -> bool:
 
 def systemd_enable_now(unit: str, *, user=False):
     if user:
-        run(["systemctl", "--user", "enable", unit])
-        run(["systemctl", "--user", "start", unit])
+        user_systemctl(["enable", unit])
+        user_systemctl(["start", unit])
     else:
         run(["systemctl", "enable", "--now", unit], sudo=True)
 
@@ -182,6 +273,7 @@ def write_file(path: str, content: str):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")
+    chown_to_user(p)
 
 
 def write_sudo(path: str, content: str):
@@ -209,7 +301,9 @@ def copy_config(src: str, dst: str):
     dst_p.parent.mkdir(parents=True, exist_ok=True)
     if dst_p.exists() and not Path(f"{dst_p}.bak").exists():
         shutil.copy2(dst_p, f"{dst_p}.bak")
+        chown_to_user(f"{dst_p}.bak")
     shutil.copy2(src, dst_p)
+    chown_to_user(dst_p)
 
 
 def sed_replace_sudo(path: str, pattern: str, repl: str) -> bool:
@@ -231,9 +325,9 @@ def extract_tar(path: str, dest: str):
         tf.extractall(dest)
 
 
-def set_default_mime(mime: str, app: str, path: str = "~/.config/mimeapps.list"):
+def set_default_mime(mime: str, app: str, path: str | None = None):
     """Дописывает/обновляет mime=app в секции [Default Applications]."""
-    p = Path(path).expanduser()
+    p = Path(path) if path else user_home() / ".config/mimeapps.list"
     p.parent.mkdir(parents=True, exist_ok=True)
     if not p.exists():
         p.write_text("", encoding="utf-8")
@@ -258,3 +352,4 @@ def set_default_mime(mime: str, app: str, path: str = "~/.config/mimeapps.list")
             out.append("[Default Applications]")
             out.append(f"{mime}={app}")
     p.write_text("\n".join(out) + "\n", encoding="utf-8")
+    chown_to_user(p)
