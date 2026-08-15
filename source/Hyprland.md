@@ -1,6 +1,6 @@
 # Hyprland — установка и настройка (Ubuntu)
 
-> Задача `hyprland` (`tasks/hyprland.sh`) ставит Hyprland-окружение и раскладывает
+> Задача `hyprland` (`tasks/hyprland.py`) ставит Hyprland-окружение и раскладывает
 > конфиги из `configs/` репозитория. Запускается через движок:
 > `python3 install.py --host pc|laptop` (порядок задач — в `query.json`).
 
