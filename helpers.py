@@ -89,6 +89,27 @@ def chown_to_user(path: str | Path) -> None:
         pass
 
 
+def chown_recursive(path: str | Path) -> None:
+    """chown_to_user для всего дерева (выгруженные архивы и т.п.)."""
+    p = Path(path)
+    if not is_root():
+        return
+    try:
+        if not p.resolve().is_relative_to(user_home().resolve()):
+            return
+    except OSError:
+        return
+    uid, gid = user_uid_gid()
+    if not uid:
+        return
+    for root, dirs, files in os.walk(p):
+        for name in dirs + files:
+            try:
+                os.chown(Path(root) / name, uid, gid)
+            except OSError:
+                pass
+
+
 def user_systemctl(args, *, check=True) -> int:
     """systemctl --user от имени реального пользователя (мы под root)."""
     user = sudo_user()

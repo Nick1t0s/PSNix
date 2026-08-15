@@ -323,15 +323,27 @@ def run():
         shutil.rmtree(old, ignore_errors=True)
     with tarfile.open("/tmp/jetbrains-toolbox.tar.gz") as tf:
         tf.extractall(dest)
+    helpers.chown_recursive(dest)
     apps = sorted(dest.glob("jetbrains-toolbox-*/bin/jetbrains-toolbox"))
     if not apps:
         raise helpers.TaskError("не найден бинарник JetBrains Toolbox")
-    subprocess.Popen([str(apps[0])], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for _ in range(30):
+    launch = [str(apps[0])]
+    if helpers.is_root() and real_user:
+        uid, _ = helpers.user_uid_gid()
+        if uid:
+            launch = ["sudo", "-u", real_user, "--preserve-env", "env",
+                      f"XDG_RUNTIME_DIR=/run/user/{uid}", str(apps[0])]
+    subprocess.Popen(launch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    started = False
+    for _ in range(60):
         if (dest / ".appState.json").exists():
+            started = True
             break
         time.sleep(1)
-    if not (dest / ".appState.json").exists():
+    if not started:
+        started = helpers.run_silent(
+            ["pgrep", "-u", real_user or "root", "-f", "jetbrains-toolbox"]) == 0
+    if not started:
         raise helpers.TaskError("JetBrains Toolbox не запустился")
 
     # 13. Только для PC: OpenRGB, DeepCool, fix-docker-vpn
