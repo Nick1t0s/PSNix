@@ -239,22 +239,34 @@ def run():
 
     # 10. Скриптовые установки: lazydocker, lazyssh, konsave, ollama
     helpers.emit("── lazydocker")
-    helpers.shell("curl -fsSL https://raw.githubusercontent.com/jesseduffield/"
-                  "lazydocker/master/scripts/install_update_linux.sh | bash")
+    if helpers.run_silent("curl -fsSL https://raw.githubusercontent.com/jesseduffield/"
+                          "lazydocker/master/scripts/install_update_linux.sh | bash",
+                          shell=True) == 0:
+        helpers._record_success("lazydocker")
+    else:
+        helpers._record_failure("lazydocker", "continue")
     helpers.emit("── lazyssh")
     tag = helpers.get_json(
         "https://api.github.com/repos/Adembc/lazyssh/releases/latest").get("tag_name")
     if not tag or tag == "null":
-        raise helpers.TaskError("не удалось получить версию lazyssh")
-    helpers.download(f"https://github.com/Adembc/lazyssh/releases/download/{tag}/"
-                     f"lazyssh_{platform.system()}_{platform.machine()}.tar.gz",
-                     "/tmp/lazyssh.tar.gz")
-    helpers.run(["tar", "-xzf", "/tmp/lazyssh.tar.gz", "-C", "/tmp"])
-    helpers.run(["mv", "/tmp/lazyssh", "/usr/local/bin/"], sudo=True)
+        helpers._record_failure("lazyssh: не удалось получить версию", "continue")
+    else:
+        try:
+            helpers.download(f"https://github.com/Adembc/lazyssh/releases/download/{tag}/"
+                             f"lazyssh_{platform.system()}_{platform.machine()}.tar.gz",
+                             "/tmp/lazyssh.tar.gz")
+            helpers.run(["tar", "-xzf", "/tmp/lazyssh.tar.gz", "-C", "/tmp"])
+            helpers.run(["mv", "/tmp/lazyssh", "/usr/local/bin/"], sudo=True)
+            helpers._record_success("lazyssh")
+        except helpers.TaskError as e:
+            helpers._record_failure(f"lazyssh: {e}", "continue")
     helpers.emit("── konsave (pipx)")
     helpers.apt_install("pipx", on_error="continue")
-    helpers.run(["pipx", "ensurepath"])
-    helpers.run(["pipx", "install", "konsave"])
+    if helpers.run_silent(["pipx", "ensurepath"]) == 0 and \
+            helpers.run_silent(["pipx", "install", "konsave"]) == 0:
+        helpers._record_success("konsave")
+    else:
+        helpers._record_failure("konsave (pipx)", "continue")
     helpers.emit("── Ollama")
     helpers.emit("  Тихая установка, может занять несколько минут...")
     for _ in range(3):
@@ -263,7 +275,10 @@ def run():
             break
         time.sleep(3)
     else:
+        helpers._record_failure("ollama", "continue")
         raise helpers.TaskError("не удалось установить Ollama")
+    if helpers.capture(["which", "ollama"]):
+        helpers._record_success("ollama")
 
     # 11. Deb-пакеты: nekoray, obsidian, zoom
     helpers.emit("── Nekoray")

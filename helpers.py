@@ -140,12 +140,15 @@ def task_main(name: str, run_func) -> int:
     """
     host = os.environ.get("PSNIX_HOST") or "default"
     FAILURES.clear()
+    SUCCESS.clear()
     begin_task(REPO / "logs" / host / f"{name}.txt")
     try:
         run_func()
+        print_summary()
         emit(f"\n{GREEN}✔{RESET} {BOLD}{name}{RESET}: готово")
         return 0
     except TaskError as e:
+        print_summary()
         emit(f"\n{RED}✘{RESET} {BOLD}{name}{RESET}: {e}")
         return 1
     except KeyboardInterrupt:
@@ -299,6 +302,30 @@ def prompt(message: str) -> str:
 # ---- пакеты -----------------------------------------------------------
 
 FAILURES: list[str] = []
+SUCCESS: list[str] = []
+
+
+def _record_success(msg: str):
+    SUCCESS.append(msg)
+
+
+def print_summary():
+    """Итог задачи: что установилось, что нет."""
+    if not SUCCESS and not FAILURES:
+        return
+    emit("")
+    emit(f"  {BOLD}════════════ ИТОГ ════════════{RESET}")
+    emit(f"  Успешно: {GREEN}{len(SUCCESS)}{RESET}   Провал: {RED}{len(FAILURES)}{RESET}")
+    if SUCCESS:
+        emit("")
+        emit(f"  {GREEN}Установлено:{RESET}")
+        for item in SUCCESS:
+            emit(f"    ✔ {item}")
+    if FAILURES:
+        emit("")
+        emit(f"  {RED}Не удалось поставить:{RESET}")
+        for item in FAILURES:
+            emit(f"    ✘ {item}")
 
 
 def _record_failure(msg: str, on_error: str):
@@ -324,6 +351,8 @@ def apt_install(*packages, verify=True, on_error="stop"):
             continue
         if verify and not dpkg_installed(pkg):
             _record_failure(f"apt {pkg}: не установлен (dpkg)", on_error)
+            continue
+        _record_success(pkg)
 
 
 def apt_install_deb(path: str, on_error="stop"):
@@ -332,6 +361,8 @@ def apt_install_deb(path: str, on_error="stop"):
                          title=f"apt: {Path(path).name}")
     if rc != 0:
         _record_failure(f"apt install {Path(path).name}: код {rc}", on_error)
+        return
+    _record_success(Path(path).name)
 
 
 def dpkg_installed(package: str) -> bool:
@@ -347,6 +378,8 @@ def snap_install(name: str, *, classic=False, on_error="stop"):
         return
     if not snap_installed(name):
         _record_failure(f"snap {name}: не установлен", on_error)
+        return
+    _record_success(name)
 
 
 def snap_installed(name: str) -> bool:
