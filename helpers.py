@@ -32,6 +32,16 @@ YELLOW = "\033[33m"
 BOLD = "\033[1m"
 RESET = "\033[0m"
 
+# терминалы для установки пакетов в отдельном окне (имя -> флаги перед командой)
+TERMINALS = [
+    ("kitty", ["-e"]),
+    ("alacritty", ["-e"]),
+    ("foot", ["-e"]),
+    ("konsole", ["-e"]),
+    ("gnome-terminal", ["--"]),
+    ("xterm", ["-e"]),
+]
+
 
 class TaskError(Exception):
     """Установка не удалась (команда упала или проверка не прошла)."""
@@ -196,6 +206,49 @@ def shell(cmd: str, *, check=True) -> int:
     return run(cmd, shell=True, check=check)
 
 
+def _ensure_root_runtime() -> None:
+    """root не имеет XDG_RUNTIME_DIR — без него kitty не стартует."""
+    if not is_root():
+        return
+    os.environ.setdefault("XDG_RUNTIME_DIR", "/run/user/0")
+    Path(os.environ["XDG_RUNTIME_DIR"]).mkdir(mode=0o700, exist_ok=True)
+
+
+def run_in_terminal(cmd, *, title: str = "", check=False) -> int:
+    """Запуск команды в отдельном терминале; окно закрывается по окончании.
+
+    Без графического терминала (или вне сессии) — инлайн-запуск.
+    Возвращает код возврата; при check=True и ненулевом коде бросает TaskError.
+    """
+    _ensure_root_runtime()
+    term = None
+    for name, flags in TERMINALS:
+        if shutil.which(name):
+            term = (name, flags)
+            break
+    if term is None:
+        return run(cmd, check=check)
+    argv = [term[0]]
+    if term[0] == "kitty" and title:
+        argv += ["--title", title]
+    argv += [*term[1], *cmd]
+    try:
+        proc = subprocess.Popen(argv, env=ENV, start_new_session=True)
+    except OSError:
+        return run(cmd, check=check)
+    try:
+        rc = proc.wait()
+    except KeyboardInterrupt:
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        raise
+    if check and rc != 0:
+        raise TaskError(f"команда завершилась с кодом {rc}: {cmd!r}")
+    return rc
+
+
 def run_silent(cmd, *, shell=False, sudo=False) -> int:
     """Тихий запуск без вывода (прогресс-бары и т.п.). Возвращает код."""
     argv = (["sudo"] + list(cmd)) if (sudo and not shell and not is_root()) else cmd
@@ -224,11 +277,20 @@ def prompt(message: str) -> str:
 # ---- пакеты -----------------------------------------------------------
 
 def apt_install(*packages, verify=True):
-    run(["apt", "install", "-y", *packages], sudo=True)
-    if verify:
-        missing = [p for p in packages if not dpkg_installed(p)]
-        if missing:
-            raise TaskError(f"не установлены (dpkg): {', '.join(missing)}")
+    for pkg in packages:
+        rc = run_in_terminal(["apt", "install", "-y", pkg], title=f"apt: {pkg}")
+        if rc != 0:
+            raise TaskError(f"apt install {pkg}: код {rc}")
+        if verify and not dpkg_installed(pkg):
+            raise TaskError(f"не установлен (dpkg): {pkg}")
+
+
+def apt_install_deb(path: str):
+    """Установка локального .deb в отдельном окне."""
+    rc = run_in_terminal(["apt", "install", "-y", path],
+                         title=f"apt: {Path(path).name}")
+    if rc != 0:
+        raise TaskError(f"apt install {path}: код {rc}")
 
 
 def dpkg_installed(package: str) -> bool:
@@ -238,7 +300,9 @@ def dpkg_installed(package: str) -> bool:
 
 def snap_install(name: str, *, classic=False):
     cmd = ["snap", "install", name] + (["--classic"] if classic else [])
-    run(cmd, sudo=True)
+    rc = run_in_terminal(cmd, title=f"snap: {name}")
+    if rc != 0:
+        raise TaskError(f"snap install {name}: код {rc}")
     if not snap_installed(name):
         raise TaskError(f"не установлен snap: {name}")
 

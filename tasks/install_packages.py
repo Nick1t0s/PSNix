@@ -133,7 +133,7 @@ def run():
     helpers.apt_install("curl", "wget", "unzip")
     if not helpers.dpkg_installed("p7zip-full"):
         # Ubuntu 26.04: p7zip-full убран из репозитория, заменён на 7zip
-        helpers.run(["apt", "install", "-y", "7zip"], sudo=True, check=False)
+        helpers.apt_install("7zip", verify=False)
         if not helpers.dpkg_installed("7zip"):
             helpers.apt_install("p7zip-full", verify=False)  # 22.04/24.04
             if not helpers.dpkg_installed("p7zip-full"):
@@ -272,7 +272,7 @@ def run():
     helpers.emit("── Nekoray")
     helpers.apt_install("libxcb-xinerama0", verify=False)
     helpers.download(NEKORAY_URL, "/tmp/nekoray.deb")
-    helpers.run(["apt", "install", "-y", "/tmp/nekoray.deb"], sudo=True)
+    helpers.apt_install_deb("/tmp/nekoray.deb")
     helpers.emit("── Obsidian")
     ver = helpers.get_json("https://api.github.com/repos/obsidianmd/"
                            "obsidian-releases/releases/latest")["tag_name"].lstrip("v")
@@ -280,7 +280,7 @@ def run():
         raise helpers.TaskError("не удалось получить версию Obsidian")
     helpers.download(f"https://github.com/obsidianmd/obsidian-releases/releases/download/"
                      f"v{ver}/obsidian_{ver}_amd64.deb", "/tmp/obsidian.deb")
-    helpers.run(["apt", "install", "-y", "/tmp/obsidian.deb"], sudo=True)
+    helpers.apt_install_deb("/tmp/obsidian.deb")
 
     helpers.emit("── Zoom")
     helpers.emit("  Скачайте Zoom: https://zoom.us/download?os=linux")
@@ -302,7 +302,7 @@ def run():
         if manual and Path(manual).is_file():
             deb = manual
             break
-    helpers.run(["apt", "install", "-y", deb], sudo=True)
+    helpers.apt_install_deb(deb)
 
     # 12. JetBrains Toolbox
     helpers.emit("── JetBrains Toolbox")
@@ -359,7 +359,7 @@ def run():
         helpers.run(["cp", local_rules, "/usr/lib/udev/rules.d/"], sudo=True)
         helpers.run(["udevadm", "control", "--reload-rules"], sudo=True)
         helpers.run(["udevadm", "trigger"], sudo=True)
-        helpers.run(["apt", "install", "-y", local_deb], sudo=True)
+        helpers.apt_install_deb(local_deb)
         if helpers.sed_replace_sudo("/etc/default/grub",
                                     r'^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"$',
                                     r'GRUB_CMDLINE_LINUX_DEFAULT="\1 acpi_enforce_resources=lax"'):
