@@ -1,6 +1,6 @@
 # VirtualBox
 
-Установка **интерактивная**: во время `apt install virtualbox-ext-pack` нужно вручную принять лицензию Oracle PUEL, поэтому VirtualBox НЕ входит в `laptop.sh`/`pc.sh`.
+Установка **интерактивная**: во время `apt install virtualbox-ext-pack` нужно вручную принять лицензию Oracle PUEL, поэтому VirtualBox НЕ входит в списки задач (`query.json`).
 
 Ставится одной командой из `laptop/interactive.txt` / `pc/interactive.txt`:
 

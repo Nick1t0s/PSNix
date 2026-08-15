@@ -1,6 +1,8 @@
 # Hyprland — установка и настройка (Ubuntu)
 
-> Таск `task_hyprland` в `pc/pc.sh` / `laptop/laptop.sh` ставит Hyprland-окружение и раскладывает конфиги из `configs/` репозитория.
+> Задача `hyprland` (`tasks/hyprland.sh`) ставит Hyprland-окружение и раскладывает
+> конфиги из `configs/` репозитория. Запускается через движок:
+> `python3 install.py --host pc|laptop` (порядок задач — в `query.json`).
 
 ---
 
@@ -10,7 +12,8 @@
 sudo apt install -y \
   hyprland hypridle hyprlock hyprpaper waybar wofi kitty \
   xdg-desktop-portal-gtk xdg-desktop-portal-hyprland \
-  brightnessctl playerctl pavucontrol wireplumber
+  brightnessctl playerctl pavucontrol wireplumber \
+  grim slurp
 ```
 
 - `hypridle` — idle-демон (лок через 5 минут, выключение монитора)
@@ -20,6 +23,7 @@ sudo apt install -y \
 - `wofi` — меню приложений (`$menu` в hyprland.conf)
 - `kitty` — терминал (`$terminal` и `$fileManager = kitty -e yazi`)
 - `brightnessctl`, `playerctl`, `wireplumber` — клавиши яркости/медиа/громкости
+- `grim`, `slurp` — скриншоты (PrtScrn / Shift+PrtScrn)
 
 ## Шаг 2 — Терминальный файл-пикер (yazi в диалогах)
 
@@ -60,7 +64,7 @@ systemctl --user restart xdg-desktop-portal.service
 
 ## Браузер по умолчанию
 
-`task_hyprland` назначает **Firefox** браузером по умолчанию, дописывая
+Задача `hyprland` назначает **Firefox** браузером по умолчанию, дописывая
 секцию `[Default Applications]` в `~/.config/mimeapps.list`:
 
 ```
@@ -88,7 +92,8 @@ gio mime x-scheme-handler/https firefox_firefox.desktop
 
 - `Super+R` — меню приложений (wofi)
 - `Super+E` — файловый менеджер (kitty + yazi)
-- `Super+L` — блокировка (hyprlock)
+- `Ctrl+Alt+L` — блокировка (hyprlock)
+- `PrtScrn` — скриншот области (grim+slurp → буфер), `Shift+PrtScrn` — весь экран
 - `Ctrl+Alt+T` — терминал
 - `Super+H/J/K/L` — фокус, `Super+Ctrl+H/J/K/L` — перемещение окна
 - `Super+Shift+H/J/K/L` — resize окна

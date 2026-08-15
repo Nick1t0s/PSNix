@@ -83,7 +83,7 @@ desktop-file-validate ~/.local/share/applications/warthunder.desktop
 
 ## Установка через скрипты PSNix
 
-Задача `task_warthunder` (есть и в `pc/pc.sh`, и в `laptop/laptop.sh`) делает всё автоматически:
+Задача `warthunder` (`tasks/warthunder.sh`, есть в списках обоих хостов) делает всё автоматически:
 
 1. Ищет `wt_launcher_linux_*.tar.gz` в корне репо, затем в `~/Downloads` и текущей папке;
 2. Пересоздаёт `~/wta` и распаковывает архив туда;
