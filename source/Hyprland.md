@@ -3,8 +3,9 @@
 > Установщик разбит на 3 фазы: `install_packages` (все пакеты,
 > кроме Wayland-стека), `copy_configs` (все конфиги из `configs/`),
 > `install_wayland` (пакеты Hyprland + сборка терминального файл-пикера).
-> Каждая фаза — отдельный терминал. Запуск: `sudo -E python3 install.py --host pc|laptop`
-> (порядок фаз — в `query.json`).
+> Каждая фаза — отдельный скрипт: `sudo -E python3 tasks/install_packages.py`
+> → `sudo -E python3 tasks/copy_configs.py` → `sudo -E python3 tasks/install_wayland.py`.
+> Для хоста PC добавьте `PSNIX_HOST=pc` (для laptop — не нужно, это значение по умолчанию).
 
 ---
 

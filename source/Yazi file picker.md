@@ -3,7 +3,9 @@
 > Файловые диалоги приложений (открыть/сохранить/выбор папки) открываются
 > в терминале с yazi вместо стандартного GTK-диалога. Установку делает
 > фаза `install_wayland` (сборка termfilechooser), конфиги кладёт фаза
-> `copy_configs` — запуск: `sudo -E python3 install.py --host pc|laptop`.
+> `copy_configs`: `sudo -E python3 tasks/install_packages.py` →
+> `sudo -E python3 tasks/copy_configs.py` → `sudo -E python3 tasks/install_wayland.py`
+> (для PC — с `PSNIX_HOST=pc`).
 
 > **Исключение — Zoom**: Qt+CEF-клиент Zoom уходит в терминальный пикер,
 > поэтому фаза `copy_configs` создаёт `~/.local/share/applications/Zoom.desktop`

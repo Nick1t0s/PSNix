@@ -20,7 +20,7 @@ import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent
-HOST = "laptop"
+HOST = os.environ.get("PSNIX_HOST", "laptop")
 
 ENV = os.environ.copy()
 ENV["DEBIAN_FRONTEND"] = "noninteractive"
@@ -37,7 +37,7 @@ class TaskError(Exception):
     """Установка не удалась (команда упала или проверка не прошла)."""
 
 
-# ---- реальный пользователь (движок и задачи работают под sudo/root) ----
+# ---- реальный пользователь (задачи работают под sudo/root) ----
 
 def is_root() -> bool:
     return os.geteuid() == 0
@@ -102,10 +102,10 @@ def xdg_user_dir(name: str) -> str:
 
 
 def task_main(name: str, run_func) -> int:
-    """Точка входа standalone-задачи (запускается движком в своём терминале).
+    """Точка входа standalone-задачи (запускается с sudo, host — из env PSNIX_HOST).
 
-    Логирует в logs/<host>/<name>.txt (host из env PSNIX_HOST), возвращает
-    код возврата: 0 — успех, 1 — TaskError/ошибка, 130 — Ctrl+C.
+    Логирует в logs/<host>/<name>.txt, возвращает код возврата:
+    0 — успех, 1 — TaskError/ошибка, 130 — Ctrl+C.
     """
     host = os.environ.get("PSNIX_HOST") or "default"
     begin_task(REPO / "logs" / host / f"{name}.txt")
