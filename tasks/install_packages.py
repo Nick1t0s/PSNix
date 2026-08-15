@@ -187,8 +187,9 @@ def run():
                  "containerd", "runc"], sudo=True, check=False)
     helpers.apt_install("ca-certificates", "curl", "gnupg")
     helpers.run(["install", "-m", "0755", "-d", "/etc/apt/keyrings"], sudo=True)
+    helpers.run(["rm", "-f", "/tmp/docker.gpg", "/tmp/docker.gpg.dear"])
     helpers.download(DOCKER_REPO, "/tmp/docker.gpg")
-    helpers.run(["gpg", "--batch", "--dearmor", "-o", "/tmp/docker.gpg.dear", "/tmp/docker.gpg"])
+    helpers.run(["gpg", "--batch", "--yes", "--dearmor", "-o", "/tmp/docker.gpg.dear", "/tmp/docker.gpg"])
     helpers.run(["cp", "/tmp/docker.gpg.dear", "/etc/apt/keyrings/docker.gpg"], sudo=True)
     helpers.run(["chmod", "a+r", "/etc/apt/keyrings/docker.gpg"], sudo=True)
     codename = ""
