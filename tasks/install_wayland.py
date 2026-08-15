@@ -25,8 +25,8 @@ def run():
 
     # 2. Терминальный файл-пикер: xdg-desktop-portal-termfilechooser (yazi в диалогах)
     helpers.emit("── Сборка termfilechooser")
-    helpers.apt_install("build-essential", "ninja-build", "meson", "libinih-dev",
-                        "libsystemd-dev", "scdoc")
+    helpers.apt_install("build-essential", "ninja-build", "meson", "pkg-config",
+                        "libinih-dev", "libsystemd-dev", "scdoc")
     tfc = home / ".local/libexec/xdg-desktop-portal-termfilechooser"
     if not tfc.exists():
         helpers.run(["git", "clone", "--depth", "1", TERMFILECHOOSER_REPO, "/tmp/tfc-build"])
