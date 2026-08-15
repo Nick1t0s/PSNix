@@ -1,12 +1,8 @@
 {
   "pc": [
-    "install_packages",
-    "copy_configs",
-    "install_wayland"
+    "install_packages"
   ],
   "laptop": [
-    "install_packages",
-    "copy_configs",
-    "install_wayland"
+    "install_packages"
   ]
 }

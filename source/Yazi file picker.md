@@ -1,14 +1,12 @@
 # Yazi как файловый пикер в диалогах (xdg-desktop-portal-termfilechooser)
 
 > Файловые диалоги приложений (открыть/сохранить/выбор папки) открываются
-> в терминале с yazi вместо стандартного GTK-диалога. Установку делает
-> фаза `install_wayland` (сборка termfilechooser), конфиги кладёт фаза
-> `copy_configs`: `sudo -E python3 tasks/install_packages.py` →
-> `sudo -E python3 tasks/copy_configs.py` → `sudo -E python3 tasks/install_wayland.py`
-> (для PC — с `PSNIX_HOST=pc`).
+> в терминале с yazi вместо стандартного GTK-диалога. Установщик теперь
+> ставит только пакеты (`sudo -E python3 tasks/install_packages.py`);
+> сборку termfilechooser и копирование конфигов делайте вручную по шагам ниже.
 
 > **Исключение — Zoom**: Qt+CEF-клиент Zoom уходит в терминальный пикер,
-> поэтому фаза `copy_configs` создаёт `~/.local/share/applications/Zoom.desktop`
+> поэтому создаётся `~/.local/share/applications/Zoom.desktop`
 > с `Exec=env QT_QPA_PLATFORMTHEME=gtk3 GTK_USE_PORTAL=0 ...` — у Zoom
 > остаётся нативный диалог.
 

@@ -1,15 +1,14 @@
 # Hyprland — установка и настройка (Ubuntu)
 
-> Установщик разбит на 3 фазы: `install_packages` (все пакеты,
-> кроме Wayland-стека), `copy_configs` (все конфиги из `configs/`),
-> `install_wayland` (пакеты Hyprland + сборка терминального файл-пикера).
-> Каждая фаза — отдельный скрипт: `sudo -E python3 tasks/install_packages.py`
-> → `sudo -E python3 tasks/copy_configs.py` → `sudo -E python3 tasks/install_wayland.py`.
-> Для хоста PC добавьте `PSNIX_HOST=pc` (для laptop — не нужно, это значение по умолчанию).
+> Установщик теперь ставит только пакеты (`install_packages`). Wayland-стек и
+> копирование конфигов делаются вручную — полное руководство по восстановлению
+> конфигов: **«Восстановление конфигов Hyprland.md»** в этой же папке.
+> Команда запуска пакетной фазы: `sudo -E python3 tasks/install_packages.py`
+> (для хоста PC добавьте `PSNIX_HOST=pc`; для laptop — не нужно, это значение по умолчанию).
 
 ---
 
-## Шаг 1 — Пакеты (фаза `install_wayland`)
+## Шаг 1 — Пакеты (Wayland-стек, вручную)
 
 ```bash
 sudo apt install -y \
@@ -39,10 +38,10 @@ git clone --depth 1 https://github.com/hunkyburrito/xdg-desktop-portal-termfilec
 cd /tmp/tfc-build && meson setup build --prefix="$HOME/.local" && ninja -C build install
 ```
 
-## Шаг 3 — Конфиги (фаза `copy_configs`)
+## Шаг 3 — Конфиги (вручную)
 
-Скрипт копирует файлы из `configs/` в `~/.config/` (существующие
-бэкапятся в `*.bak`):
+Конфиги копируются из `configs/` в `~/.config/` (см. **«Восстановление
+конфигов Hyprland.md»**). Существующие бэкапятся в `*.bak`:
 
 | Куда | Что |
 |---|---|
@@ -67,8 +66,8 @@ systemctl --user restart xdg-desktop-portal.service
 
 ## Браузер по умолчанию
 
-Фаза `copy_configs` назначает **Firefox** браузером по умолчанию, дописывая
-секцию `[Default Applications]` в `~/.config/mimeapps.list`:
+Назначить **Firefox** браузером по умолчанию можно так (дописывает секцию
+`[Default Applications]` в `~/.config/mimeapps.list`):
 
 ```
 x-scheme-handler/http=firefox_firefox.desktop
