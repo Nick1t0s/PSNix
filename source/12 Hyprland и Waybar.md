@@ -1,0 +1,236 @@
+# 12 — Hyprland и Waybar (окружение)
+
+> Wayland-композитор Hyprland, статус-бар Waybar, терминальный файл-пикер
+> (yazi в диалогах) и восстановление конфигов из `laptop/configs/` и `pc/configs/` этого репозитория.
+
+---
+
+## Требования
+
+- Ubuntu / Debian / Linux Mint
+- Права `sudo`
+
+---
+
+## Шаг 1 — Пакеты Wayland-стека
+
+```bash
+sudo apt install -y \
+  hyprland hypridle hyprlock hyprpaper waybar wofi kitty \
+  xdg-desktop-portal-gtk xdg-desktop-portal-hyprland \
+  brightnessctl playerctl pavucontrol wireplumber \
+  grim slurp
+```
+
+- `hypridle` — idle-демон (лок через 5 минут, выключение монитора)
+- `hyprlock` — экран блокировки, `hyprpaper` — обои
+- `waybar` — статус-бар, `wofi` — меню приложений, `kitty` — терминал
+- `brightnessctl`, `playerctl`, `wireplumber` — клавиши яркости/медиа/громкости
+- `grim`, `slurp` — скриншоты (PrtScrn / Shift+PrtScrn)
+
+---
+
+## Шаг 2 — Копирование конфигов
+
+Конфиги лежат в `laptop/configs/` (ноутбук) и `pc/configs/` (ПК, два экрана:
+главный 1920x1200 с waybar + вертикальный 1200x1920, повёрнутый на 90°).
+Ниже — копирование для текущего хоста (подставь `laptop` или `pc` вместо `$HOST`).
+Существующие конфиги перед заменой бэкапятся в `*.bak` вручную:
+`cp ~/.config/hypr/hyprland.conf{,.bak}`.
+
+```bash
+cp -v $HOST/configs/hypr/hyprland.conf          ~/.config/hypr/hyprland.conf
+cp -v $HOST/configs/hypr/hypridle.conf          ~/.config/hypr/hypridle.conf
+cp -v $HOST/configs/hypr/hyprlock.conf          ~/.config/hypr/hyprlock.conf
+cp -v $HOST/configs/hypr/hyprpaper.conf         ~/.config/hypr/hyprpaper.conf
+cp -v $HOST/configs/waybar/hyprland-config      ~/.config/waybar/hyprland-config
+cp -v $HOST/configs/waybar/hyprland-style.css   ~/.config/waybar/hyprland-style.css
+cp -v $HOST/configs/waybar/scripts/cpu-temp.sh  ~/.config/waybar/scripts/cpu-temp.sh
+chmod +x ~/.config/waybar/scripts/cpu-temp.sh
+```
+
+> На ПК имена портов мониторов (`DP-1`/`DP-2` в конфиге) проверь через
+> `hyprctl monitors` и поправь при необходимости.
+
+---
+
+## Шаг 3 — Waybar через systemd (авто-перезапуск)
+
+В `hyprland.conf`: `exec-once = systemctl --user restart waybar-hyprland.service`.
+Пакетный `waybar.service` замаскировать (он привязан к `graphical-session.target`
+и стартует с дефолтным конфигом), вместо него — свой юнит с `Restart=on-failure`:
+
+```bash
+systemctl --user mask waybar.service
+mkdir -p ~/.config/systemd/user
+cp -v $HOST/configs/systemd/user/waybar-hyprland.service ~/.config/systemd/user/waybar-hyprland.service
+systemctl --user daemon-reload
+systemctl --user restart waybar-hyprland.service
+```
+
+Проверка: `systemctl --user status waybar-hyprland.service` (active) и `pgrep -a waybar`.
+
+Файлы waybar: `hyprland-config` (JSON-конфиг модулей), `hyprland-style.css` (стиль),
+`scripts/cpu-temp.sh` (температура CPU Package, модуль `custom/cpu-temp`, опрос раз в 5 сек).
+
+---
+
+## Шаг 4 — Терминальный файл-пикер (yazi в диалогах)
+
+Файловые диалоги приложений открываются в kitty с yazi (режим выбора:
+**Enter** — выбрать, **Q** — отмена) через `xdg-desktop-portal-termfilechooser`.
+Сборка из исходников в `~/.local` без root:
+
+```bash
+sudo apt install -y build-essential ninja-build meson pkg-config libinih-dev libsystemd-dev scdoc
+git clone --depth 1 https://github.com/hunkyburrito/xdg-desktop-portal-termfilechooser /tmp/tfc-build
+cd /tmp/tfc-build && meson setup build --prefix="$HOME/.local" && ninja -C build install
+```
+
+Конфиги порталов:
+
+```bash
+mkdir -p ~/.config/xdg-desktop-portal-termfilechooser \
+         ~/.config/xdg-desktop-portal \
+         ~/.config/environment.d
+cp -v $HOST/configs/portals/termfilechooser/config          ~/.config/xdg-desktop-portal-termfilechooser/config
+cp -v $HOST/configs/portals/xdg-desktop-portal/portals.conf ~/.config/xdg-desktop-portal/portals.conf
+cp -v $HOST/configs/portals/environment.d/portal.conf       ~/.config/environment.d/portal.conf
+systemctl --user restart xdg-desktop-portal.service
+```
+
+Проверка:
+
+```bash
+GDK_DEBUG=portals zenity --file-selection   # должна открыться kitty с yazi
+```
+
+Логи бэкенда: `journalctl --user -eu xdg-desktop-portal-termfilechooser`.
+
+### «Показать в папке» → тоже yazi (org.freedesktop.FileManager1)
+
+```bash
+sudo apt install -y libdbus-1-dev
+git clone --depth 1 https://github.com/boydaihungst/org.freedesktop.FileManager1.common /tmp/fm1-build
+cd /tmp/fm1-build && meson setup build --prefix="$HOME/.local" && ninja -C build install
+pkill dolphin   # dolphin держит имя org.freedesktop.FileManager1, пока запущен
+```
+
+Конфиг (`$HOST/configs/portals/filemanager1/config` содержит плейсхолдер `@PREFIX@`):
+
+```bash
+mkdir -p ~/.config/org.freedesktop.FileManager1.common
+sed 's|@PREFIX@|'"$HOME"'/.local|' \
+  $HOST/configs/portals/filemanager1/config > ~/.config/org.freedesktop.FileManager1.common/config
+```
+
+Проверка:
+
+```bash
+busctl --user call org.freedesktop.FileManager1 /org/freedesktop/FileManager1 \
+  org.freedesktop.FileManager1 ShowItems as s 1 "file://$HOME/Downloads/файл" ""
+```
+
+> Приложения, игнорирующие портал, покажут свой диалог.
+
+---
+
+## Шаг 5 — Firefox и браузер по умолчанию
+
+```bash
+sudo apt install firefox -y
+xdg-settings set default-web-browser firefox_firefox.desktop
+```
+
+В `about:config`:
+
+- `widget.use-xdg-desktop-portal.file-picker = 1` — файловые диалоги в yazi
+- `widget.use-xdg-desktop-portal.open-uri = 1` — «Показать в папке» в yazi
+
+> На Ubuntu Firefox — snap, id десктоп-файла именно `firefox_firefox.desktop`.
+
+---
+
+## Шаг 6 — Zoom: нативный диалог вместо терминального пикера
+
+Qt+CEF-клиент Zoom уходит в терминальный пикер, поэтому ему подкладывается
+user-level `.desktop` (перекрывает системный и переживает обновления):
+
+```bash
+mkdir -p ~/.local/share/applications
+```
+
+Создай `~/.local/share/applications/Zoom.desktop`:
+
+```ini
+[Desktop Entry]
+Name=Zoom Workplace
+Comment=Zoom Video Conference
+Exec=env QT_QPA_PLATFORMTHEME=gtk3 GTK_USE_PORTAL=0 /usr/bin/zoom %U
+Icon=Zoom
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=Network;Application;
+StartupWMClass=zoom
+MimeType=x-scheme-handler/zoommtg;x-scheme-handler/zoomus;x-scheme-handler/tel;x-scheme-handler/callto;x-scheme-handler/zoomphonecall;x-scheme-handler/zoomphonesms;x-scheme-handler/zoomcontactcentercall;application/x-zoom
+X-KDE-Protocols=zoommtg;zoomus;tel;callto;zoomphonecall;zoomphonesms;zoomcontactcentercall;
+Name[en_US]=Zoom Workplace
+```
+
+```bash
+update-desktop-database ~/.local/share/applications
+```
+
+---
+
+## Шаг 7 — Настройка вручную
+
+1. **Шрифт** `JetBrainsMono Nerd Font` (waybar/hyprlock): распакуй архивы
+   Nerd Font в `~/.local/share/fonts/` и выполни `fc-cache -f`.
+2. **Обои**: hyprpaper/hyprlock указывают на
+   `~/Pictures/Mikasa_Ackerman_Aesthetic_Wallpaper_4K_Attack_on_Titan_Lockscreen.jpg`
+   — положи файл (есть в `laptop/wallpapers/`) или поправь пути в конфигах.
+3. **waybar** `on-click` ссылается на `~/.local/bin/rofi-bluetooth` и
+   `~/.local/bin/rofi-wifi` — создай эти скрипты или замени команды.
+
+---
+
+## Шаг 8 — VM-оверрайд (VirtualBox / VMware)
+
+На виртуалке софтовый рендерер (`llvmpipe`) не тянет blur/shadow/animations.
+Подключи лёгкий конфиг:
+
+```bash
+cp -v $HOST/configs/hypr/vm.conf ~/.config/hypr/vm.conf
+echo -e "\n# VM detected\nsource = ~/.config/hypr/vm.conf" >> ~/.config/hypr/hyprland.conf
+```
+
+Он отключает эффекты, ставит масштаб 1 и `WLR_NO_HARDWARE_CURSORS=1`. Проверка:
+
+```bash
+hyprctl getoption decoration:blur:enabled
+hyprctl getoption animations:enabled
+```
+
+---
+
+## Горячие клавиши (основные)
+
+- `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
+- `Ctrl+Alt+L` — блокировка (hyprlock), `Ctrl+Alt+T` — терминал
+- `PrtScrn` — скриншот области, `Shift+PrtScrn` — весь экран
+- `Super+H/J/K/L` — фокус, `Super+Ctrl+H/J/K/L` — перемещение, `Super+Shift+H/J/K/L` — resize
+- `Super+1..0` — воркспейсы, `Ctrl+Super+←/→` — переключение
+- `Super+Space` — раскладка (`grp:win_space_toggle`)
+
+---
+
+## Ссылки
+
+- [Hyprland Wiki](https://wiki.hypr.land/Configuring/)
+- [Waybar Wiki](https://github.com/Alexays/Waybar/wiki)
+- [Yazi — chooser mode](https://yazi-rs.github.io/docs/usage/chooser/)
+- [xdg-desktop-portal-termfilechooser](https://github.com/hunkyburrito/xdg-desktop-portal-termfilechooser)
+- [org.freedesktop.FileManager1.common](https://github.com/boydaihungst/org.freedesktop.FileManager1.common)
+- [XDG Desktop Portal (ArchWiki)](https://wiki.archlinux.org/title/XDG_Desktop_Portal)

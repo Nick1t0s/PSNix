@@ -1,0 +1,162 @@
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+    font-weight: bold;
+    min-height: 0;
+}
+
+window#waybar {
+    background: #2b2f37;
+    color: #adb1b9;
+
+    border-radius: 6px;
+}
+
+#custom-menu {
+    color: #61afef;
+    padding: 0 10px;
+}
+
+#workspaces button {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0 5px;
+    min-width: 0;
+    color: #888e96;
+}
+
+#workspaces button:nth-child(1) {
+    color: #F9DE8F;
+}
+
+#workspaces button:nth-child(2) {
+    color: #ff9b93;
+}
+
+#workspaces button:nth-child(3) {
+    color: #95e1d3;
+}
+
+#workspaces button:nth-child(4) {
+    color: #81A1C1;
+}
+
+#workspaces button:nth-child(5) {
+    color: #A3BE8C;
+}
+
+#workspaces button:nth-child(6) {
+    color: #F9DE8F;
+}
+
+#workspaces button:nth-child(7) {
+    color: #ff9b93;
+}
+
+#workspaces button:nth-child(8) {
+    color: #95e1d3;
+}
+
+#workspaces button:nth-child(9) {
+    color: #81A1C1;
+}
+
+#workspaces button.active {
+    color: #ffffff;
+}
+
+#custom-cpu-temp {
+    color: #a4ebf3;
+    padding: 0 8px;
+}
+
+#memory {
+    color: #d19a66;
+    padding: 0 8px;
+}
+
+#cpu {
+    color: #989cff;
+    padding: 0 8px;
+}
+
+#battery {
+    color: #A0E8A2;
+    padding: 0 8px;
+}
+
+#battery.warning {
+    color: #e5c07b;
+}
+
+#battery.critical {
+    color: #d35f5e;
+}
+
+#backlight {
+    color: #61afef;
+    padding: 0 8px;
+}
+
+#pulseaudio {
+    color: #d35f5e;
+    padding: 0 8px;
+}
+
+#pulseaudio.muted {
+    color: #d35f5e;
+}
+
+#language {
+    color: #ffffff;
+    padding: 0 8px;
+}
+
+#clock {
+    color: #888e96;
+    padding: 0 8px;
+}
+
+#bluetooth {
+    color: #adb1b9;
+    font-size: 17px;
+    padding: 0 9px;
+}
+
+#network {
+    color: #A3BE8C;
+    padding: 0 8px;
+}
+
+#network.disconnected {
+    color: #d35f5e;
+}
+
+#custom-powermenu {
+    color: #d35f5e;
+    padding: 0 10px;
+}
+
+tooltip {
+    background: #1e222a;
+    border: 1px solid #454b55;
+    border-radius: 6px;
+}
+
+tooltip label {
+    color: #adb1b9;
+}
+
+#tray {
+    padding: 0 8px;
+    margin: 0 4px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+}

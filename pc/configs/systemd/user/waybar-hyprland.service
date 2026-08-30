@@ -1,0 +1,8 @@
+[Unit]
+Description=Waybar for Hyprland
+Documentation=https://github.com/Alexays/Waybar/wiki/
+
+[Service]
+ExecStart=/usr/bin/waybar -c /home/nik/.config/waybar/hyprland-config -s /home/nik/.config/waybar/hyprland-style.css
+ExecReload=kill -SIGUSR2 $MAINPID
+Restart=on-failure
