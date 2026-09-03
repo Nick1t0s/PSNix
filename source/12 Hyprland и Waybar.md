@@ -52,6 +52,9 @@ chmod +x ~/.config/waybar/scripts/cpu-temp.sh
 > На ПК имена портов мониторов (`DP-1`/`DP-2` в конфиге) проверь через
 > `hyprctl monitors` и поправь при необходимости.
 
+> Графический планшет (XP-Pen Deco 01 V3, ПК): помимо этого шага нужен override
+> libwacom и waybar-скрипты виджета — см. «13 — Только для ПК», Часть 3.
+
 ---
 
 ## Шаг 3 — Waybar через systemd (авто-перезапуск)
@@ -72,6 +75,20 @@ systemctl --user restart waybar-hyprland.service
 
 Файлы waybar: `hyprland-config` (JSON-конфиг модулей), `hyprland-style.css` (стиль),
 `scripts/cpu-temp.sh` (температура CPU Package, модуль `custom/cpu-temp`, опрос раз в 5 сек).
+
+> **Двойной hypridle**: новые Ubuntu поставляют `hypridle.service` включённым
+> (глобальный пресет), а `hyprland.conf` уже запускает hypridle через `exec-once` —
+> получаются два экземпляра с двойными таймерами (двойной лок/гашение экрана).
+> Дистровский юнит маскируется в user-scope (перекрывает global-пресет):
+>
+> ```bash
+> systemctl --user mask hypridle.service
+> systemctl --user stop hypridle.service
+> pgrep -a hypridle   # должен остаться один экземпляр
+> ```
+>
+> `hyprpaper.service` трогать не нужно — `hyprland.conf` сознательно стартует
+> именно дистровский юнит (`exec-once = systemctl --user start hyprpaper.service`).
 
 ---
 
@@ -103,6 +120,31 @@ systemctl --user restart xdg-desktop-portal.service
 
 ```bash
 GDK_DEBUG=portals zenity --file-selection   # должна открыться kitty с yazi
+```
+
+#### Режим «Save As»
+
+Ключевые опции конфига: `save_mode=suggested` — диалог сохранения стартует
+в папке, которую предложило приложение (у браузера это папка загрузок),
+а не в `$HOME` (значение `last` при первом запуске деградирует до
+`default_dir`).
+
+Портал сам создаёт файл-плейсхолдер с предложенным именем (`create_help_file=1`
+по умолчанию) и открывает его в yazi. Workflow:
+
+- **Enter** на плейсхолдере — сохранить с предложенным именем и путём
+  (браузер перезапишет плейсхолдер содержимым скачивания);
+- `r` (rename) или перемещение файла — задать своё имя/папку, затем **Enter**
+  на файле с новым именем;
+- **Q** — отмена, плейсхолдер удалится автоматически.
+
+Внимание: выбор существующего файла и **Enter** перезапишет его — это
+нормальное поведение любого save-диалога.
+
+Проверка save-режима:
+
+```bash
+GDK_DEBUG=portals zenity --file-selection --save --filename="$HOME/test.txt"
 ```
 
 Логи бэкенда: `journalctl --user -eu xdg-desktop-portal-termfilechooser`.
