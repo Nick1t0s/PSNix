@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "top",
-    "output": "DP-1",
+    "output": "DP-3",
 
     "height": 42,
     "margin-top": 3,
@@ -22,8 +22,8 @@
 
     "modules-right": [
         "tray",
-        "battery",
-        "backlight",
+        "custom/brightness",
+        "custom/tablet",
         "pulseaudio",
         "hyprland/language",
         "clock",
@@ -40,10 +40,7 @@
 
     "hyprland/workspaces": {
         "format": "{id}",
-        "sort-by": "number",
-        "persistent-workspaces": {
-            "*": 9
-        }
+        "sort-by": "number"
     },
 
     "custom/cpu-temp": {
@@ -98,6 +95,22 @@
         "tooltip-format": "Brightness: {percent}%"
     },
 
+    "custom/tablet": {
+        "exec": "~/.config/waybar/scripts/tablet.sh",
+        "interval": 10,
+        "return-type": "json",
+        "signal": 8,
+        "on-click": "~/.config/waybar/scripts/tablet-toggle.sh"
+    },
+
+    "custom/brightness": {
+        "exec": "~/.config/waybar/scripts/brightness.sh",
+        "interval": 5,
+        "return-type": "json",
+        "on-scroll-up": "ddcutil -g HPN setvcp 10 + 5 && ddcutil -g AUS setvcp 10 + 5",
+        "on-scroll-down": "ddcutil -g HPN setvcp 10 - 5 && ddcutil -g AUS setvcp 10 - 5"
+    },
+
     "pulseaudio": {
         "format": "{icon} {volume}%",
         "format-muted": "󰖁 muted",
@@ -140,7 +153,7 @@
     },
 
     "network": {
-        "interface": "wlp0s20f3",
+        "interface": "enp4s0",
         "interval": 3,
         "format-wifi": "  {signalStrength}%",
         "format-disconnected": "󰖪  offline",

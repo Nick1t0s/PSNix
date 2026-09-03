@@ -104,6 +104,18 @@ window#waybar {
     padding: 0 8px;
 }
 
+#custom-brightness {
+    color: #e6b673;
+    padding: 0 8px;
+    margin: 0 4px;
+}
+
+#custom-tablet {
+    color: #7dcfff;
+    padding: 0 8px;
+    margin: 0 4px;
+}
+
 #pulseaudio.muted {
     color: #d35f5e;
 }
