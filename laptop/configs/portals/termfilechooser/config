@@ -3,4 +3,4 @@ cmd=yazi-wrapper.sh
 default_dir=$HOME
 env=TERMCMD='kitty --title "filechooser"'
 open_mode=suggested
-save_mode=last
+save_mode=suggested
