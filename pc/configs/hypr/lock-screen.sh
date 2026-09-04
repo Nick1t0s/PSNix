@@ -5,8 +5,9 @@ MAIN_LOCK="DP-3,1920x1200@60,0x0,1"
 SEC_LINE="HDMI-A-1,1920x1200@59.95,0x0,1,transform,1"
 
 restore() {
-    hyprctl keyword monitor "$SEC_LINE" >/dev/null 2>&1
+    # сначала уводим главный в его рабочую позицию, чтобы включаемый HDMI не перекрывался с ним
     hyprctl keyword monitor "$MAIN_LINE" >/dev/null 2>&1
+    hyprctl keyword monitor "$SEC_LINE" >/dev/null 2>&1
     hyprctl dispatch dpms on >/dev/null 2>&1
     # hyprpaper не переприменяет обои после toggle мониторов — перезапускаем
     systemctl --user restart hyprpaper.service >/dev/null 2>&1
