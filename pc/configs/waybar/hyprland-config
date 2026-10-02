@@ -105,10 +105,10 @@
 
     "custom/brightness": {
         "exec": "~/.config/waybar/scripts/brightness.sh",
-        "interval": 5,
         "return-type": "json",
-        "on-scroll-up": "ddcutil -g HPN setvcp 10 + 5 && ddcutil -g AUS setvcp 10 + 5",
-        "on-scroll-down": "ddcutil -g HPN setvcp 10 - 5 && ddcutil -g AUS setvcp 10 - 5"
+        "signal": 7,
+        "on-scroll-up": "~/.config/waybar/scripts/brightness-change.sh +5",
+        "on-scroll-down": "~/.config/waybar/scripts/brightness-change.sh -5"
     },
 
     "pulseaudio": {

@@ -257,6 +257,45 @@ hyprctl getoption animations:enabled
 
 ---
 
+## Шаг 9 — Фикс краш-цикла DrKonqi (микрофризы каждые ~10 сек)
+
+> Симптом: система периодически заикается каждые 7–10 секунд — в играх (CS),
+> при рисовании на планшете в rnote и т.п. Причина: обработчик крашей KDE
+> (`drkonqi-coredump-launcher`) сам сегфолтится; его падение пишется как новый
+> coredump, системный `drkonqi-coredump-processor@` снова стартует лаунчер —
+> бесконечный цикл (сотни крашей в час, каждый цикл — запись дампа на диск,
+> спавн systemd-юнитов и journal-записи = микрофриз).
+> Проверка: `coredumpctl list | tail` — дампы `drkonqi-coredump-launcher`
+> каждые 10–25 сек.
+
+```bash
+# 1. Разорвать цикл: замаскировать юзерные юниты DrKonqi
+systemctl --user mask \
+  drkonqi-coredump-launcher.socket \
+  drkonqi-coredump-launcher@.service \
+  drkonqi-coredump-pickup.service \
+  drkonqi-sentry-postman.path
+systemctl --user stop \
+  drkonqi-coredump-launcher.socket \
+  drkonqi-coredump-pickup.service \
+  drkonqi-sentry-postman.path
+
+# 2. Убрать системный обработчик (он стартует лаунчер в обход сокета)
+sudo systemctl disable --now drkonqi-coredump-processor@.service
+
+# 3. Почистить накопившиеся дампы (могут занимать гигабайты)
+sudo rm -rf /var/lib/systemd/coredump/*
+```
+
+Проверка: подождать минуту, `coredumpctl list --since "-5 min"` — пусто;
+фризы исчезли (проверить в игре/на планшете).
+
+> Диалоги «Приложение упало» от KDE больше не показываются — apport
+> продолжает логировать краши (`journalctl`, `/var/crash`). Реальные краши
+> приложений видны через `coredumpctl list` (systemd-coredump не трогали).
+
+---
+
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
