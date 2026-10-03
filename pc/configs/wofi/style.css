@@ -4,17 +4,20 @@
     font-weight: bold;
 }
 
+/* фон окна должен быть прозрачным: с непрозрачным GTK помечает весь прямоугольник
+   как opaque, и Hyprland рисует за скруглёнными углами чёрный/белый фон.
+   Сама «карточка» (фон, рамка, скругление) — на #outer-box */
 window {
-    background-color: #2b2f37;
-    border: 1px solid #454b55;
-    border-radius: 6px;
+    background-color: transparent;
+    border: none;
     color: #adb1b9;
 }
 
 #outer-box {
-    margin: 6px;
-    background: transparent;
-    border: none;
+    background-color: #2b2f37;
+    border: 1px solid #454b55;
+    border-radius: 6px;
+    padding: 6px;
 }
 
 #input {
