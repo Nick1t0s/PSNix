@@ -62,8 +62,56 @@ window#waybar {
     color: #81A1C1;
 }
 
-#workspaces button.active {
+#workspaces button.active,
+#workspaces button.visible {
     color: #ffffff;
+}
+
+#workspaces.side {
+    border-left: 1px solid #454b55;
+    margin-left: 4px;
+    padding-left: 4px;
+}
+
+/* Позиции 1-10 занимают скрытые столы главного монитора, так что 11 = nth-child(11).
+   Та же пятёрка цветов, что и у 1-10: 11 как 1, 12 как 2 и т.д. */
+#workspaces.side button:nth-child(5n+1) {
+    color: #F9DE8F;
+}
+
+#workspaces.side button:nth-child(5n+2) {
+    color: #ff9b93;
+}
+
+#workspaces.side button:nth-child(5n+3) {
+    color: #95e1d3;
+}
+
+#workspaces.side button:nth-child(5n+4) {
+    color: #81A1C1;
+}
+
+#workspaces.side button:nth-child(5n+5) {
+    color: #A3BE8C;
+}
+
+#workspaces.side button.visible,
+#workspaces.side button.active {
+    color: #ffffff;
+}
+
+/* Столы главного монитора (1-10) уже в основном списке. ignore-workspaces на
+   persistent-столы из правил Hyprland не действует, поэтому прячем их здесь.
+   font-size ставим на label: на него напрямую действует `* { font-size }`. */
+#workspaces.side button.hosting-monitor {
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    border: none;
+}
+
+#workspaces.side button.hosting-monitor label {
+    font-size: 0;
 }
 
 #custom-cpu-temp {
@@ -147,7 +195,7 @@ window#waybar {
 
 #custom-powermenu {
     color: #d35f5e;
-    padding: 0 10px;
+    padding: 0 16px 0 10px;
 }
 
 tooltip {

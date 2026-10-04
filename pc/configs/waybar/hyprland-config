@@ -11,7 +11,8 @@
 
     "modules-left": [
         "custom/menu",
-        "hyprland/workspaces"
+        "hyprland/workspaces",
+        "hyprland/workspaces#side"
     ],
 
     "modules-center": [
@@ -41,6 +42,13 @@
     "hyprland/workspaces": {
         "format": "{id}",
         "sort-by": "number"
+    },
+
+    "hyprland/workspaces#side": {
+        "format": "{id}",
+        "sort-by": "number",
+        "all-outputs": true,
+        "ignore-workspaces": ["^([1-9]|10)$"]
     },
 
     "custom/cpu-temp": {
