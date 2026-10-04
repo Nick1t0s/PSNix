@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
-# Блокировка: гасим доп-монитор и центрируем главный; после разблокировки возвращаем всё
-MAIN_LINE="DP-3,1920x1200@60,1200x720,1"
-MAIN_LOCK="DP-3,1920x1200@60,0x0,1"
-SEC_LINE="HDMI-A-1,1920x1200@59.95,0x0,1,transform,1"
+# Блокировка: гасим доп-монитор через DPMS, после разблокировки включаем.
+# Не disable: тогда HDMI пропадает из Hyprland, и если выключить DP-3 кнопкой, мониторов не остаётся —
+# Hyprland заводит виртуальный FALLBACK со столом 11+ и после включения отдаёт этот стол DP-3.
+# Проверка до trap: повторный вызов во время блокировки не должен включать HDMI
+pidof hyprlock >/dev/null 2>&1 && exit 0
 
 restore() {
-    # сначала уводим главный в его рабочую позицию, чтобы включаемый HDMI не перекрывался с ним
-    hyprctl keyword monitor "$MAIN_LINE" >/dev/null 2>&1
-    hyprctl keyword monitor "$SEC_LINE" >/dev/null 2>&1
     hyprctl dispatch dpms on >/dev/null 2>&1
-    # hyprpaper не переприменяет обои после toggle мониторов — перезапускаем
+    # hyprpaper не переприменяет обои после переподключения монитора — перезапускаем
     systemctl --user restart hyprpaper.service >/dev/null 2>&1
 }
 trap restore EXIT
 
-pidof hyprlock >/dev/null 2>&1 && exit 0
-hyprctl keyword monitor "HDMI-A-1,disable" >/dev/null 2>&1
-hyprctl keyword monitor "$MAIN_LOCK" >/dev/null 2>&1
+hyprctl dispatch dpms off HDMI-A-1 >/dev/null 2>&1
 hyprlock
