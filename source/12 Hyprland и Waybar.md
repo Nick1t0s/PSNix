@@ -302,7 +302,8 @@ sudo rm -rf /var/lib/systemd/coredump/*
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
-- `Ctrl+Alt+L` — блокировка (hyprlock), `Ctrl+Alt+T` — терминал
+- `Super+Escape` — блокировка (hyprlock), `Ctrl+Alt+T` — терминал
+  (`Ctrl+Alt+L` не занят: в PyCharm/CLion это «слово вправо», см. доку 02, Шаг 9)
 - `PrtScrn` — скриншот области, `Shift+PrtScrn` — весь экран
 - `Super+H/J/K/L` — фокус, `Super+Ctrl+H/J/K/L` — перемещение, `Super+Shift+H/J/K/L` — resize
 - `Super+1..0` — воркспейсы, `Ctrl+Super+←/→` — переключение
