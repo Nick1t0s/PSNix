@@ -299,6 +299,82 @@ sudo rm -rf /var/lib/systemd/coredump/*
 
 ---
 
+## Шаг 10 — LibreOffice: GTK3 под Wayland и вид «как MS Office»
+
+> Симптом: LibreOffice открывается не на том мониторе и не того размера
+> (на ПК окно Writer было размером с вертикальный монитор, а окно Calc вообще за пределами экрана).
+> Причины: со времён Plasma стоит только Qt/KDE-вариант интерфейса (`libreoffice-kf6/qt6`),
+> который под Hyprland ведёт себя хуже всего, а в профиле запомнилась битая
+> геометрия окон (`ooSetupFactoryWindowAttributes`).
+
+```bash
+sudo apt install -y libreoffice-gtk3 fonts-crosextra-carlito fonts-crosextra-caladea
+```
+
+- `libreoffice-gtk3` — GTK3-вариант интерфейса, работает под Wayland без XWayland: Hyprland сам ставит окно
+  на монитор с фокусом и сам задаёт ему размер
+- `fonts-crosextra-carlito` / `-caladea` — шрифты с теми же размерами, что Calibri / Cambria: документы
+  из Word открываются без съехавшей вёрстки
+
+В `hyprland.conf` уже есть (Шаг 2 их ставит):
+
+- `env = SAL_USE_VCLPLUGIN,gtk3` — принудительно GTK3-вариант (kf6/qt6 не удалены, на них можно откатиться);
+- правило `libreoffice-tile` (`match:class = ^(libreoffice-.*|soffice)$`, `tile = yes`) — окно всегда
+  в тайлинге, запомненный размер не мешает.
+
+**Тема Fluent (Windows 11) только для LibreOffice.** Остальные GTK-программы остаются в Breeze-Dark:
+
+```bash
+git clone --depth 1 https://github.com/vinceliuice/Fluent-gtk-theme /tmp/fluent-build
+/tmp/fluent-build/install.sh -d ~/.themes -c light -s standard   # → ~/.themes/Fluent-Light, без sudo/sassc
+install -Dm755 $HOST/configs/libreoffice/libreoffice.sh ~/.local/bin/libreoffice
+```
+
+Обёртка задаёт `GTK_THEME=Fluent-Light` и запускает `/usr/bin/libreoffice`. Она работает потому, что
+`~/.local/bin` стоит первым в PATH, а все ярлыки `libreoffice-*.desktop` вызывают просто `libreoffice`.
+
+**Профиль** `~/.config/libreoffice/4/user/registrymodifications.xcu`. Профиль появляется после первого
+запуска LibreOffice. Перед правкой LibreOffice должен быть полностью закрыт (`pgrep -a soffice` пусто),
+иначе при выходе он перезапишет файл:
+
+```bash
+f=~/.config/libreoffice/4/user/registrymodifications.xcu
+cp -p "$f" "$f.bak"
+sed -i '/ooSetupFactoryWindowAttributes/d' "$f"           # сброс битой геометрии окон
+p='<item oor:path="/org.openoffice.Office.Writer/DefaultFont"><prop oor:name='
+sed -i 's#^</oor:items>$#<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="SymbolStyle" oor:op="fuse"><value>colibre</value></prop></item>\n'\
+"$p"'"Standard" oor:op="fuse"><value>Carlito</value></prop></item>\n'\
+"$p"'"StandardHeight" oor:op="fuse"><value>388</value></prop></item>\n'\
+"$p"'"Heading" oor:op="fuse"><value>Carlito</value></prop></item>\n'\
+"$p"'"List" oor:op="fuse"><value>Carlito</value></prop></item>\n'\
+"$p"'"Caption" oor:op="fuse"><value>Carlito</value></prop></item>\n'\
+"$p"'"Index" oor:op="fuse"><value>Carlito</value></prop></item>\n</oor:items>#' "$f"
+python3 -I -c "import xml.dom.minidom,sys; xml.dom.minidom.parse(sys.argv[1]); print('XML OK')" "$f"
+```
+
+- `SymbolStyle = colibre` — плоские цветные значки в стиле MS Office (вместо Breeze)
+- `DefaultFont` — в Writer по умолчанию Carlito 11 pt, как Calibri 11 в Word (`StandardHeight` в 1/100 мм:
+  11 pt = 388)
+
+**Лента (вручную, через профиль не задаётся):** View → User Interface… → **Tabbed** → **Apply to All**.
+Через профиль меняется только `ToolbarMode/…/Active`, а старые панели и строка меню остаются,
+и интерфейс получается двойным. Команда меню переключает всё сразу.
+
+Проверка (открыть Writer через лаунчер, а не из старого терминала):
+
+```bash
+pid=$(pgrep -x soffice.bin)
+tr '\0' '\n' < /proc/$pid/environ | grep -E '^(GTK_THEME|SAL_USE_VCLPLUGIN)='   # Fluent-Light, gtk3
+grep -oE 'libvclplug_[a-z0-9]+lo\.so' /proc/$pid/maps | sort -u                 # libvclplug_gtk3lo.so
+hyprctl clients | grep -A22 'class: libreoffice-writer' | grep -E 'xwayland|floating|monitor'   # 0 / 0 / монитор с фокусом
+```
+
+> Откат: удалить `~/.local/bin/libreoffice` (тема), убрать `SAL_USE_VCLPLUGIN` и `libreoffice-tile`
+> из `hyprland.conf` + `hyprctl reload`, профиль вернуть из `.bak`,
+> ленту — View → User Interface → Standard Toolbar → Apply to All.
+
+---
+
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
