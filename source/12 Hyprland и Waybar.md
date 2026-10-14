@@ -375,6 +375,69 @@ hyprctl clients | grep -A22 'class: libreoffice-writer' | grep -E 'xwayland|floa
 
 ---
 
+## Шаг 11 — LibreOffice падает в Calc: свой gdk-pixbuf без glycin
+
+> Симптом: Calc внезапно закрывается, когда входишь в ячейку для редактирования (чаще всего на реестре
+> регистрации). После перезапуска предлагает восстановить документ, остаётся `.~lock.*#` рядом с файлом.
+> Причина: при входе в ячейку сайдбар перестраивается и грузит иконку (`gtk_image_new_from_file`).
+> gdk-pixbuf 2.44 грузит картинки только через glycin 2.1.1, а glycin держит процесс-загрузчик ~30 с
+> и потом гасит его. Следующая загрузка после этого паникует внутри `gly_loader_load` → `abort`.
+> Проверка: `coredumpctl list soffice.bin` — SIGABRT, в `coredumpctl info <PID>` стек
+> `gly_loader_load` ← `gdk_pixbuf_loader_close` ← `SidebarController::UpdateConfigurations`.
+
+Выключить glycin в системном gdk-pixbuf переменной нельзя, а glycin 2.1.5 из `resolute-updates` по changelog
+это не чинит. Поэтому только LibreOffice получает gdk-pixbuf 2.42.12 из Ubuntu 25.10 (последний без glycin).
+Системные пакеты не трогаются. Сборка Debian не подходит: она слинкована с `libjpeg.so.62`, а в Ubuntu
+есть только `libjpeg.so.8`.
+
+Из корня репо:
+
+```bash
+install -Dm755 $HOST/configs/libreoffice/libreoffice.sh ~/.local/bin/libreoffice   # обёртка из Шага 10
+m=http://archive.ubuntu.com/ubuntu   # когда 25.10 уберут из архива — http://old-releases.ubuntu.com/ubuntu
+deb=libgdk-pixbuf-2.0-0_2.42.12+dfsg-5ubuntu0.1_amd64.deb
+cd "$(mktemp -d)"
+
+# 1. Скачать и проверить: подпись InRelease → хеш Packages.xz → хеш .deb
+curl -fsSO $m/dists/questing-updates/InRelease
+curl -fsSO $m/dists/questing-updates/main/binary-amd64/Packages.xz
+curl -fsSO $m/pool/main/g/gdk-pixbuf/$deb
+gpgv --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg InRelease          # Good signature
+grep -q " $(sha256sum Packages.xz | cut -c1-64) .*main/binary-amd64/Packages.xz$" InRelease && echo "Packages OK"
+xz -dc Packages.xz | grep -A6 "^Filename: .*/$deb$" | grep -q "^SHA256: $(sha256sum $deb | cut -c1-64)$" && echo "deb OK"
+
+# 2. Распаковать без скриптов пакета в ~/.local/lib/libreoffice-pixbuf
+dpkg-deb -x $deb x
+p=~/.local/lib/libreoffice-pixbuf; l=x/usr/lib/x86_64-linux-gnu
+mkdir -p $p/loaders
+cp -a $l/libgdk_pixbuf-2.0.so.0* $l/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders $p/
+cp -a $l/gdk-pixbuf-2.0/2.10.0/loaders/*.so $p/loaders/
+ldd $p/libgdk_pixbuf-2.0.so.0 | grep 'not found'                                 # пусто
+
+# 3. Кеш загрузчиков: старые + системный SVG (librsvg); PNG и JPEG встроены в саму библиотеку
+LD_LIBRARY_PATH=$p $p/gdk-pixbuf-query-loaders $p/loaders/*.so \
+  /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader_svg.so > $p/loaders.cache
+```
+
+- Обёртка ставит `LD_LIBRARY_PATH` и `GDK_PIXBUF_MODULE_FILE` на этот каталог, только если в нём есть
+  `loaders.cache`. Без кеша LibreOffice запускается как раньше: если указать системному gdk-pixbuf пустой
+  кеш, он не найдёт SVG-загрузчик.
+- Совместимость проверена: всё, что `libgtk-3`, `libgdk-3`, `libvclplug_gtk3lo`, `librsvg` и SVG-загрузчик
+  импортируют из gdk-pixbuf, в 2.42.12 есть (`gdk_pixbuf_get_from_surface/window` — это функции `libgdk-3`).
+
+Проверка (LibreOffice полностью закрыть и открыть заново через лаунчер):
+
+```bash
+pid=$(pgrep -x soffice.bin)
+grep -oE '/[^ ]*(gdk_pixbuf-2\.0\.so|glycin)[^ ]*' /proc/$pid/maps | sort -u   # только ~/.local/lib/libreoffice-pixbuf/…, libglycin нет
+coredumpctl list soffice.bin                                                  # после нескольких минут в Calc — новых SIGABRT нет
+```
+
+> Откат: `rm -r ~/.local/lib/libreoffice-pixbuf`, обёртка без кеша сама вернётся к системному gdk-pixbuf.
+> Так же проверять, починили ли glycin после обновления: убрать каталог и поработать в Calc дольше минуты.
+
+---
+
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
