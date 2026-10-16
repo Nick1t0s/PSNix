@@ -62,7 +62,8 @@ window#waybar {
     color: #81A1C1;
 }
 
-#workspaces button.active {
+#workspaces button.active,
+#workspaces button.visible {
     color: #ffffff;
 }
 
@@ -135,7 +136,7 @@ window#waybar {
 
 #custom-powermenu {
     color: #d35f5e;
-    padding: 0 10px;
+    padding: 0 16px 0 10px;
 }
 
 tooltip {

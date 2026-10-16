@@ -46,10 +46,27 @@ cp -v $HOST/configs/hypr/hyprpaper.conf         ~/.config/hypr/hyprpaper.conf
 cp -v $HOST/configs/waybar/hyprland-config      ~/.config/waybar/hyprland-config
 cp -v $HOST/configs/waybar/hyprland-style.css   ~/.config/waybar/hyprland-style.css
 cp -v $HOST/configs/waybar/scripts/cpu-temp.sh  ~/.config/waybar/scripts/cpu-temp.sh
+cp -v $HOST/configs/waybar/scripts/powermenu.sh ~/.config/waybar/scripts/powermenu.sh
 mkdir -p ~/.config/wofi   # тёмная минималистичная тема wofi (у laptop пока та же, что у pc)
 cp -v $HOST/configs/wofi/config                 ~/.config/wofi/config
 cp -v $HOST/configs/wofi/style.css              ~/.config/wofi/style.css
-chmod +x ~/.config/waybar/scripts/cpu-temp.sh
+chmod +x ~/.config/waybar/scripts/cpu-temp.sh ~/.config/waybar/scripts/powermenu.sh
+```
+
+`powermenu.sh` — меню питания на кнопке waybar (Lock / Logout / Reboot / Shutdown через `wofi --dmenu`)
+вместо мгновенного выхода из сессии. Lock на ПК вызывает `lock-screen` (13, Часть 6), на ноуте `hyprlock`.
+
+**Тёмная тема** (Breeze-Dark для GTK, BreezeDark для Qt/KDE-программ):
+
+```bash
+sudo apt install -y breeze-gtk-theme breeze-cursor-theme kf6-breeze-icon-theme
+mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
+cp -v $HOST/configs/gtk-3.0/settings.ini        ~/.config/gtk-3.0/settings.ini
+cp -v $HOST/configs/gtk-4.0/settings.ini        ~/.config/gtk-4.0/settings.ini
+cp -v $HOST/configs/kdeglobals                  ~/.config/kdeglobals
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark   # GTK4/libadwaita смотрят сюда, а не в settings.ini
+gsettings set org.gnome.desktop.interface gtk-theme Breeze-Dark
+gsettings set org.gnome.desktop.interface icon-theme breeze
 ```
 
 > На ПК имена портов мониторов (`DP-1`/`DP-2` в конфиге) проверь через

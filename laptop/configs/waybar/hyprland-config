@@ -150,7 +150,7 @@
 
     "custom/powermenu": {
         "format": "",
-        "tooltip": "Logout",
-        "on-click": "hyprctl dispatch exit"
+        "tooltip": "Power menu",
+        "on-click": "~/.config/waybar/scripts/powermenu.sh"
     }
 }
