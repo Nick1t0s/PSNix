@@ -46,7 +46,7 @@ cp -v $HOST/configs/hypr/hyprpaper.conf         ~/.config/hypr/hyprpaper.conf
 cp -v $HOST/configs/waybar/hyprland-config      ~/.config/waybar/hyprland-config
 cp -v $HOST/configs/waybar/hyprland-style.css   ~/.config/waybar/hyprland-style.css
 cp -v $HOST/configs/waybar/scripts/cpu-temp.sh  ~/.config/waybar/scripts/cpu-temp.sh
-mkdir -p ~/.config/wofi   # тёмная минималистичная тема wofi (только pc)
+mkdir -p ~/.config/wofi   # тёмная минималистичная тема wofi (у laptop пока та же, что у pc)
 cp -v $HOST/configs/wofi/config                 ~/.config/wofi/config
 cp -v $HOST/configs/wofi/style.css              ~/.config/wofi/style.css
 chmod +x ~/.config/waybar/scripts/cpu-temp.sh
