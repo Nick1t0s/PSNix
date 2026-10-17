@@ -455,6 +455,32 @@ coredumpctl list soffice.bin                                                  # 
 
 ---
 
+## Шаг 12 — War Thunder: Waybar поверх полноэкранной игры
+
+> Симптом: в режиме «Полноэкранный» Waybar остаётся видна поверх игры.
+> Причина: игра (нативный Linux-клиент, окно через XWayland) просто растягивает обычное окно на весь
+> монитор и не просит fullscreen. Для Hyprland это плавающее окно (`fullscreen: 0`), а слой `top`,
+> на котором стоит Waybar, рисуется поверх всего, кроме настоящих fullscreen-окон.
+
+В `hyprland.conf` уже есть (Шаг 2 его ставит) правило `warthunder-fullscreen` с `fullscreen = yes`.
+Оно матчит окно по `initial_class` / `initial_title` = `Loading...` + `xwayland = true`. Такой class
+у окна при открытии, потом игра меняет его на `War Thunder (Vulkan, 64bit)`. `fullscreen` — статичный
+эффект, проверяется только при открытии, поэтому матч по текущему class не сработал бы.
+
+Проверка (игру перезапустить из лаунчера, правило срабатывает только при открытии окна):
+
+```bash
+hyprctl clients -j | python3 -I -c 'import json,sys; [print(c["class"], c["initialClass"], c["fullscreen"]) for c in json.load(sys.stdin) if c["xwayland"]]'
+# War Thunder (Vulkan, 64bit) Loading... 2
+```
+
+Если после обновления игры Waybar вернулась, посмотреть фактический `initialClass` той же командой
+и поправить матчер.
+
+> Откат: убрать блок `warthunder-fullscreen` из `hyprland.conf` (Hyprland перечитает сам или `hyprctl reload`).
+
+---
+
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
