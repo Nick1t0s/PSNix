@@ -69,21 +69,32 @@ gsettings set org.gnome.desktop.interface gtk-theme Breeze-Dark
 gsettings set org.gnome.desktop.interface icon-theme breeze
 ```
 
-**Миниатюры Dolphin/KDE в RAM (защита от компрометации и износа SSD):**
+**Миниатюры Dolphin/KDE и кэш Telegram в RAM (защита от компрометации и износа SSD):**
 
-По умолчанию Dolphin и другие программы сохраняют превью всех открытых файлов,
-изображений и документов в `~/.cache/thumbnails/`, где они остаются навсегда
-(даже после удаления файлов или очистки корзины). Перенос в tmpfs (`%t` = `$XDG_RUNTIME_DIR` = `/run/user/$UID`):
+По умолчанию Dolphin сохраняет превью всех открытых файлов в `~/.cache/thumbnails/`,
+а Telegram накапливает гигабайты просмотренных медиа, аватарок и стикеров в `user_data/cache`
+и `user_data/media_cache`, где они остаются навсегда.
+Перенос кэша в tmpfs (`%t` = `$XDG_RUNTIME_DIR` = `/run/user/$UID`):
 
 ```bash
 mkdir -p ~/.config/user-tmpfiles.d
-cp -v $HOST/configs/user-tmpfiles.d/thumbnails.conf ~/.config/user-tmpfiles.d/thumbnails.conf
+cp -v $HOST/configs/user-tmpfiles.d/*.conf ~/.config/user-tmpfiles.d/
 systemd-tmpfiles --user --create
+
+# 1. Миниатюры Dolphin / KDE
 rm -rf ~/.cache/thumbnails
 ln -sf /run/user/$(id -u)/thumbnails ~/.cache/thumbnails
+
+# 2. Кэш Telegram Desktop (медиа, фото, стикеры, аватарки)
+TDIR="$HOME/.local/share/TelegramDesktop/tdata/user_data"
+mkdir -p "$TDIR"
+rm -rf "$TDIR/cache" "$TDIR/media_cache"
+ln -sf /run/user/$(id -u)/telegram/cache "$TDIR/cache"
+ln -sf /run/user/$(id -u)/telegram/media_cache "$TDIR/media_cache"
 ```
 
-> Все миниатюры живут только в оперативной памяти и бесследно стираются при перезагрузке или выходе из сессии.
+> Все миниатюры и кэш Telegram живут исключительно в оперативной памяти (RAM)
+> и бесследно стираются при перезагрузке или выходе из системы (авторизация в Telegram при этом не слетает).
 
 > На ПК имена портов мониторов (`DP-1`/`DP-2` в конфиге) проверь через
 > `hyprctl monitors` и поправь при необходимости.
