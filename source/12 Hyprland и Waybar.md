@@ -69,6 +69,22 @@ gsettings set org.gnome.desktop.interface gtk-theme Breeze-Dark
 gsettings set org.gnome.desktop.interface icon-theme breeze
 ```
 
+**Миниатюры Dolphin/KDE в RAM (защита от компрометации и износа SSD):**
+
+По умолчанию Dolphin и другие программы сохраняют превью всех открытых файлов,
+изображений и документов в `~/.cache/thumbnails/`, где они остаются навсегда
+(даже после удаления файлов или очистки корзины). Перенос в tmpfs (`%t` = `$XDG_RUNTIME_DIR` = `/run/user/$UID`):
+
+```bash
+mkdir -p ~/.config/user-tmpfiles.d
+cp -v $HOST/configs/user-tmpfiles.d/thumbnails.conf ~/.config/user-tmpfiles.d/thumbnails.conf
+systemd-tmpfiles --user --create
+rm -rf ~/.cache/thumbnails
+ln -sf /run/user/$(id -u)/thumbnails ~/.cache/thumbnails
+```
+
+> Все миниатюры живут только в оперативной памяти и бесследно стираются при перезагрузке или выходе из сессии.
+
 > На ПК имена портов мониторов (`DP-1`/`DP-2` в конфиге) проверь через
 > `hyprctl monitors` и поправь при необходимости.
 
@@ -208,6 +224,9 @@ xdg-settings set default-web-browser firefox_firefox.desktop
 
 - `widget.use-xdg-desktop-portal.file-picker = 1` — файловые диалоги в yazi
 - `widget.use-xdg-desktop-portal.open-uri = 1` — «Показать в папке» в yazi
+- `browser.cache.disk.enable = false` — отключить кэширование страниц и медиа на диск (кэш только в RAM; защищает от компрометации просмотренными картинками/видео)
+- `browser.cache.disk_cache_ssl = false` — не кэшировать HTTPS на диск
+- `privacy.clearOnShutdown.cache = true` — автоматическая очистка кэша при закрытии браузера
 
 > На Ubuntu Firefox — snap, id десктоп-файла именно `firefox_firefox.desktop`.
 
