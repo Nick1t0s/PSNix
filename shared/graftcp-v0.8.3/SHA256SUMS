@@ -1,0 +1,10 @@
+7cbcd88d7c7dce6b237161bc2b5933769467f3a620ad07c77e3950977429a647  laptop/configs/discord/discord-proxy.sh
+d0cbc27823911fc04b88e75bf905bbc8706b986bb337e197e42a7407a22def22  laptop/configs/discord/discord.desktop
+7cbcd88d7c7dce6b237161bc2b5933769467f3a620ad07c77e3950977429a647  pc/configs/discord/discord-proxy.sh
+d0cbc27823911fc04b88e75bf905bbc8706b986bb337e197e42a7407a22def22  pc/configs/discord/discord.desktop
+8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903  shared/graftcp-v0.8.3/COPYING
+777997b2f49b225d93779e2257caeb3919763d24476fa17f18eb63ef20073b39  shared/graftcp-v0.8.3/PROVENANCE.txt
+11a60a4e115f84e2ce528476f07db6d4b6fd4f976f52c13a9aab138dcf0b513b  shared/graftcp-v0.8.3/UPSTREAM-README.md
+ece3690f889b437933a57497ebb6fb5e4000e8ad21ebf143524a3142a771bed7  shared/graftcp-v0.8.3/UPSTREAM-SHA256SUMS
+2f29afbc6fd64159c0ad29030765b79b1c0c542ca7e9c50d68707ae9bd2e6354  shared/graftcp-v0.8.3/graftcp-v0.8.3-source.tar.gz
+d5517e0e72e453dd2ef84a13cfbe409e7c7c3bbd45ab3ea53d298a7be5ddb5b4  shared/graftcp-v0.8.3/graftcp_v0.8.3_linux-amd64.tar.gz

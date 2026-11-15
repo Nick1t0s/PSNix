@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Discord
+StartupWMClass=discord
+Comment=All-in-one voice and text chat for gamers that's free, secure, and works on both your desktop and phone.
+GenericName=Internet Messenger
+TryExec=/home/nik/.local/bin/discord-proxy
+Exec=/home/nik/.local/bin/discord-proxy --url -- %u
+Icon=discord
+Type=Application
+Terminal=false
+DBusActivatable=false
+Categories=Network;InstantMessaging;
+MimeType=x-scheme-handler/discord;
+Path=/usr/bin

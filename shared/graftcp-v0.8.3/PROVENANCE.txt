@@ -1,0 +1,16 @@
+Component: graftcp v0.8.3, official unmodified linux-amd64 release
+Recorded: 2026-11-15
+Release: https://github.com/hmgle/graftcp/releases/tag/v0.8.3
+Release archive: https://github.com/hmgle/graftcp/releases/download/v0.8.3/graftcp_v0.8.3_linux-amd64.tar.gz
+Release archive SHA256: d5517e0e72e453dd2ef84a13cfbe409e7c7c3bbd45ab3ea53d298a7be5ddb5b4
+Installed executable SHA256: ba4da2c84d8c3660af565e174f931ed6592e1c76bf551f60b2cba2f664bc982d
+Source archive: https://github.com/hmgle/graftcp/archive/refs/tags/v0.8.3.tar.gz
+Architecture: Linux x86_64; dynamically linked libc; references GLIBC_2.34.
+Local source/binary modifications: none.
+Installed executable: ~/.local/opt/graftcp-v0.8.3/usr/bin/graftcp
+Command link: ~/.local/bin/graftcp
+Discord launcher: ~/.local/bin/discord-proxy; TCP/UDP to SOCKS5 127.0.0.1:2080.
+Updater environment: ALL_PROXY, HTTP_PROXY, HTTPS_PROXY use HTTP on the same mixed port.
+Dante LD_PRELOAD is explicitly removed for this process.
+Validation: Discord working normally confirmed by user on PC; desktop/URI handler checked.
+Laptop: configuration saved; not deployed or runtime-tested.
