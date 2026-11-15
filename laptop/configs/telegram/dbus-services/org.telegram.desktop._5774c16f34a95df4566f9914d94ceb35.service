@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.telegram.desktop._5774c16f34a95df4566f9914d94ceb35
+Exec=/home/nik/.local/bin/telegram-udp

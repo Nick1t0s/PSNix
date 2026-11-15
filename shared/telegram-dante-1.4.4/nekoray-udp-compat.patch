@@ -1,0 +1,32 @@
+--- a/lib/udp.c
++++ b/lib/udp.c
+@@ -950,6 +950,14 @@
+ 
+    sockaddr2sockshost(&socksfd.local, &packet.req.host);
+ 
++   /* Opt-in compatibility for SOCKS5 relays that treat this as a destination. */
++   if (packet.req.version == PROXY_SOCKS_V5
++   &&  getenv("DANTE_UDP_ASSOCIATE_ZERO") != NULL
++   &&  strcmp(getenv("DANTE_UDP_ASSOCIATE_ZERO"), "1") == 0) {
++      bzero(&packet.req.host, sizeof(packet.req.host));
++      packet.req.host.atype = SOCKS_ADDR_IPV4;
++   }
++
+    if (socks_negotiate(s,
+                        socksfd.control,
+                        &packet,
+--- a/lib/Rgetsockname.c
++++ b/lib/Rgetsockname.c
+@@ -182,6 +182,12 @@
+             break;
+ 
+          case SOCKS_UDPASSOCIATE:
++            /* Preserve the local ICE candidate for this process's UDP socket. */
++            if (getenv("DANTE_UDP_ASSOCIATE_ZERO") != NULL
++            &&  strcmp(getenv("DANTE_UDP_ASSOCIATE_ZERO"), "1") == 0) {
++               addr = socksfd.local;
++               break;
++            }
+             swarnx("%s: getsockname() on udp sockets is not supported by the "
+             "socks protocol, trying to fake it.", function);
+ 

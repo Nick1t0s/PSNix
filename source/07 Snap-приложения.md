@@ -14,6 +14,12 @@
 
 ## Шаг 1 — Установка
 
+> Для Telegram со звонками через NekoRay на ПК и ноутбуке используется официальный
+> бинарник вне Snap и исправленная библиотека Dante:
+> [15 — Telegram: UDP через NekoRay](15%20Telegram%20—%20UDP%20через%20NekoRay.md).
+> При восстановлении этой настройки строку установки `telegram-desktop` из Snap
+> пропустить, чтобы не получить вторую копию приложения.
+
 ```bash
 sudo snap install telegram-desktop
 sudo snap install obs-studio
