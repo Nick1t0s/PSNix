@@ -511,6 +511,43 @@ hyprctl clients -j | python3 -I -c 'import json,sys; [print(c["class"], c["initi
 
 ---
 
+## Шаг 13 — CS2: Waybar появляется при звонке Telegram
+
+Симптом: при входящем звонке Telegram панель Waybar появляется поверх CS2.
+При проверке окно игры занимало весь монитор, но Hyprland показывал `floating: true`
+и `fullscreen: 0`. Изменение фокуса или порядка окон при звонке — предполагаемый
+триггер; сам звонок при настройке не воспроизводился.
+
+В конфиг ПК `pc/configs/hypr/hyprland.conf` добавлено правило:
+
+```ini
+windowrule {
+    name = cs2-fullscreen
+    match:class = ^cs2$
+
+    fullscreen = yes
+}
+```
+
+После установки конфига выполнить `hyprctl reload` и перезапустить игру:
+правило fullscreen применяется при открытии окна. Для уже запущенной CS2 можно
+применить состояние вручную (команда переключит фокус на игру):
+
+```bash
+hyprctl dispatch focuswindow 'class:^(cs2)$'
+hyprctl dispatch fullscreenstate '2 2'
+hyprctl configerrors
+hyprctl clients -j | python3 -I -c 'import json,sys; [print(c["class"], c["fullscreen"], c["fullscreenClient"]) for c in json.load(sys.stdin) if c["class"] == "cs2"]'
+# cs2 2 2
+```
+
+При настройке подтверждены `fullscreen: 2`, `fullscreenClient: 2` и отсутствие
+ошибок конфигурации. Поведение при следующем звонке Telegram ещё нужно проверить.
+
+> Откат: убрать блок `cs2-fullscreen`, выполнить `hyprctl reload` и перезапустить игру.
+
+---
+
 ## Горячие клавиши (основные)
 
 - `Super+R` — меню приложений (wofi), `Super+E` — kitty + yazi
